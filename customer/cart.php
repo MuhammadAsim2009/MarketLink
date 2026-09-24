@@ -47,9 +47,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($action === 'update_qty' && $pid > 0) {
+        $is_ajax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') 
+                   || (isset($_POST['is_ajax']) && $_POST['is_ajax'] == '1');
+        $msg = 'Basket updated.';
+        $msg_type = 'success';
+
         if ($qty <= 0) {
             unset($_SESSION['cart'][$pid]);
-            set_flash('info', 'Item removed from basket.');
+            $msg = 'Item removed from basket.';
+            $msg_type = 'info';
         } else {
             // Verify against live stock
             $stmt = $pdo->prepare("SELECT name, quantity_available FROM products WHERE product_id = :pid");
@@ -59,13 +65,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($prod) {
                 if ($qty > $prod['quantity_available']) {
                     $_SESSION['cart'][$pid] = $prod['quantity_available'];
-                    set_flash('warning', "Max available quantity for {$prod['name']} is {$prod['quantity_available']}.");
+                    $msg = "Max available quantity for {$prod['name']} is {$prod['quantity_available']}.";
+                    $msg_type = 'warning';
                 } else {
                     $_SESSION['cart'][$pid] = $qty;
-                    set_flash('success', 'Basket updated.');
+                    $msg = 'Basket updated.';
+                    $msg_type = 'success';
                 }
             }
         }
+
+        if ($is_ajax) {
+            header('Content-Type: application/json');
+            $line_total = 0;
+            $overall_total = 0;
+            $total_items = array_sum($_SESSION['cart']);
+
+            if (!empty($_SESSION['cart'])) {
+                $ph = implode(',', array_fill(0, count($_SESSION['cart']), '?'));
+                $st = $pdo->prepare("SELECT product_id, price FROM products WHERE product_id IN ($ph)");
+                $st->execute(array_keys($_SESSION['cart']));
+                $prods = $st->fetchAll(PDO::FETCH_KEY_PAIR);
+                foreach ($_SESSION['cart'] as $c_pid => $c_qty) {
+                    if (isset($prods[$c_pid])) {
+                        $item_sub = $prods[$c_pid] * $c_qty;
+                        $overall_total += $item_sub;
+                        if ($c_pid == $pid) {
+                            $line_total = $item_sub;
+                        }
+                    }
+                }
+            }
+
+            echo json_encode([
+                'success' => true,
+                'message' => $msg,
+                'msg_type' => $msg_type,
+                'qty' => $_SESSION['cart'][$pid] ?? 0,
+                'cart_count' => $total_items,
+                'line_total' => format_currency($line_total),
+                'subtotal' => format_currency($overall_total),
+                'total_amount' => format_currency($overall_total)
+            ]);
+            exit;
+        }
+
+        set_flash($msg_type, $msg);
         redirect(BASE_URL . 'customer/cart.php');
     }
 
@@ -170,7 +215,7 @@ require_once __DIR__ . '/../includes/header.php';
                                         <th>Produce</th>
                                         <th>Farmer / Stall</th>
                                         <th>Price</th>
-                                        <th style="width: 150px;">Quantity</th>
+                                        <th style="width: 165px;">Quantity</th>
                                         <th>Total</th>
                                         <th class="text-end">Remove</th>
                                     </tr>
@@ -179,12 +224,12 @@ require_once __DIR__ . '/../includes/header.php';
                                     <?php foreach ($cart_items as $item): 
                                         $p = $item['product'];
                                     ?>
-                                        <tr class="<?= !$item['is_available'] ? 'table-danger' : '' ?>">
+                                        <tr id="cart-row-<?= $p['product_id'] ?>" class="<?= !$item['is_available'] ? 'table-danger' : '' ?>">
                                             <td>
                                                 <div class="d-flex align-items-center gap-2">
                                                     <div class="rounded bg-light d-flex align-items-center justify-content-center border" style="width: 44px; height: 44px; flex-shrink: 0;">
                                                         <?php if (!empty($p['image_url'])): ?>
-                                                            <img src="<?= BASE_URL . e($p['image_url']) ?>" alt="<?= e($p['name']) ?>" class="w-100 h-100 rounded object-fit-cover" onerror="this.src='https://placehold.co/100x100?text=Produce'">
+                                                             <img src="<?= BASE_URL . e($p['image_url']) ?>" alt="<?= e($p['name']) ?>" class="w-100 h-100 rounded object-fit-cover" onerror="this.src='https://placehold.co/100x100?text=Produce'">
                                                         <?php else: ?>
                                                             <i class="bi bi-egg-fried fs-5 text-primary"></i>
                                                         <?php endif; ?>
@@ -206,15 +251,19 @@ require_once __DIR__ . '/../includes/header.php';
                                                 <?= format_currency($p['price']) ?> <small class="text-muted fw-normal">/ <?= e($p['unit']) ?></small>
                                             </td>
                                             <td>
-                                                <form action="<?= BASE_URL ?>customer/cart.php" method="POST" class="d-flex align-items-center gap-1">
+                                                <form action="<?= BASE_URL ?>customer/cart.php" method="POST" class="d-flex align-items-center gap-1 cart-qty-form" data-product-id="<?= $p['product_id'] ?>" data-price="<?= (float)$p['price'] ?>">
                                                     <?= csrf_field() ?>
                                                     <input type="hidden" name="action" value="update_qty">
                                                     <input type="hidden" name="product_id" value="<?= $p['product_id'] ?>">
-                                                    <input type="number" name="quantity" value="<?= $item['actual_qty'] ?>" min="1" max="<?= $p['quantity_available'] ?>" class="form-control form-control-sm text-center" style="width: 70px;" onchange="this.form.submit()">
-                                                    <small class="text-muted"><?= e($p['unit']) ?></small>
+                                                    <div class="input-group input-group-sm" style="width: 110px;">
+                                                        <button class="btn btn-outline-secondary btn-qty-change px-2" type="button" data-delta="-1" style="border-color: var(--border);"><i class="bi bi-dash"></i></button>
+                                                        <input type="number" name="quantity" value="<?= $item['actual_qty'] ?>" min="1" max="<?= $p['quantity_available'] ?>" class="form-control text-center px-1 cart-qty-input" data-product-id="<?= $p['product_id'] ?>" style="min-width: 38px;">
+                                                        <button class="btn btn-outline-secondary btn-qty-change px-2" type="button" data-delta="1" style="border-color: var(--border);"><i class="bi bi-plus"></i></button>
+                                                    </div>
+                                                    <small class="text-muted ms-1"><?= e($p['unit']) ?></small>
                                                 </form>
                                             </td>
-                                            <td class="fw-bold text-primary">
+                                            <td class="fw-bold text-primary" id="line-total-<?= $p['product_id'] ?>">
                                                 <?= format_currency($item['line_total']) ?>
                                             </td>
                                             <td class="text-end">
@@ -251,7 +300,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-muted">Estimated Subtotal:</span>
-                            <span class="fw-bold"><?= format_currency($total_amount) ?></span>
+                            <span class="fw-bold" id="cart-subtotal"><?= format_currency($total_amount) ?></span>
                         </div>
                         <div class="d-flex justify-content-between mb-3 text-success small">
                             <span>Pre-Order Service Fee:</span>
@@ -260,7 +309,7 @@ require_once __DIR__ . '/../includes/header.php';
                         <hr class="my-2">
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <span class="fs-6 fw-bold">Total (Pay at Pickup):</span>
-                            <span class="fs-4 fw-bold text-primary"><?= format_currency($total_amount) ?></span>
+                            <span class="fs-4 fw-bold text-primary" id="cart-grandtotal"><?= format_currency($total_amount) ?></span>
                         </div>
 
                         <div class="p-3 bg-light rounded border mb-4 small text-muted">
@@ -292,5 +341,126 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
     <?php endif; ?>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const debounceTimers = {};
+    const csrfToken = document.querySelector('input[name="csrf_token"]')?.value || '';
+
+    // Quantity stepper buttons
+    document.querySelectorAll('.btn-qty-change').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const delta = parseInt(this.dataset.delta, 10) || 0;
+            const form = this.closest('.cart-qty-form');
+            if (!form) return;
+            const input = form.querySelector('.cart-qty-input');
+            if (!input) return;
+
+            const min = parseInt(input.min, 10) || 1;
+            const max = parseInt(input.max, 10) || 999;
+            let currentVal = parseInt(input.value, 10) || 1;
+            let newVal = currentVal + delta;
+
+            if (newVal < min) newVal = min;
+            if (newVal > max) {
+                newVal = max;
+                if (window.showToast) {
+                    window.showToast(`Maximum available stock reached (${max})`, 'warning');
+                }
+            }
+
+            input.value = newVal;
+            triggerDebouncedUpdate(form, input);
+        });
+    });
+
+    // Direct input change / keystroke
+    document.querySelectorAll('.cart-qty-input').forEach(input => {
+        input.addEventListener('input', function() {
+            const form = this.closest('.cart-qty-form');
+            if (!form) return;
+            triggerDebouncedUpdate(form, this);
+        });
+    });
+
+    function triggerDebouncedUpdate(form, input) {
+        const pid = form.dataset.productId;
+        const price = parseFloat(form.dataset.price) || 0;
+        let qty = parseInt(input.value, 10);
+        const max = parseInt(input.max, 10) || 999;
+
+        if (isNaN(qty) || qty < 1) {
+            qty = 1;
+        } else if (qty > max) {
+            qty = max;
+            input.value = max;
+        }
+
+        // Snap client-side preview for line total
+        const lineTotalEl = document.getElementById(`line-total-${pid}`);
+        if (lineTotalEl) {
+            lineTotalEl.textContent = '$' + (price * qty).toFixed(2);
+        }
+
+        // Clear existing debounce timer for this product
+        if (debounceTimers[pid]) {
+            clearTimeout(debounceTimers[pid]);
+        }
+
+        // Set 500ms debounce
+        debounceTimers[pid] = setTimeout(() => {
+            sendQtyUpdate(pid, qty, form);
+        }, 500);
+    }
+
+    function sendQtyUpdate(pid, qty, form) {
+        const formData = new FormData();
+        formData.append('csrf_token', csrfToken);
+        formData.append('action', 'update_qty');
+        formData.append('product_id', pid);
+        formData.append('quantity', qty);
+        formData.append('is_ajax', '1');
+
+        fetch('<?= BASE_URL ?>customer/cart.php', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data && data.success) {
+                // Update line total with formatted value
+                const lineTotalEl = document.getElementById(`line-total-${pid}`);
+                if (lineTotalEl && data.line_total) {
+                    lineTotalEl.textContent = data.line_total;
+                }
+                // Update subtotal & grand total
+                const subtotalEl = document.getElementById('cart-subtotal');
+                if (subtotalEl && data.subtotal) {
+                    subtotalEl.textContent = data.subtotal;
+                }
+                const grandTotalEl = document.getElementById('cart-grandtotal');
+                if (grandTotalEl && data.total_amount) {
+                    grandTotalEl.textContent = data.total_amount;
+                }
+                // Update navbar cart badge
+                if (window.updateCartBadge && typeof data.cart_count !== 'undefined') {
+                    window.updateCartBadge(data.cart_count);
+                }
+                // Show debounced single toast notification
+                if (window.showToast) {
+                    window.showToast(data.message || 'Basket updated.', data.msg_type || 'success');
+                }
+            }
+        })
+        .catch(err => {
+            console.error('Cart update error:', err);
+        });
+    }
+});
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

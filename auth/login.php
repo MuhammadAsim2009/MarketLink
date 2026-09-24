@@ -161,7 +161,10 @@ require_once __DIR__ . '/../includes/header.php';
                             </div>
                             <div class="input-group">
                                 <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-lock"></i></span>
-                                <input type="password" class="form-control border-start-0" id="password" name="password" required placeholder="Enter your account password">
+                                <input type="password" class="form-control border-start-0 border-end-0" id="password" name="password" required placeholder="Enter your account password">
+                                <button class="btn btn-outline-secondary border-start-0 bg-light text-muted px-3" type="button" data-toggle-password="password" title="Show password" style="border-color: var(--border);">
+                                    <i class="bi bi-eye"></i>
+                                </button>
                             </div>
                         </div>
 

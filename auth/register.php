@@ -307,13 +307,25 @@ require_once __DIR__ . '/../includes/header.php';
                         <div class="row g-2 mb-4">
                             <div class="col-md-6">
                                 <label class="form-label small fw-semibold" for="password">Password <span class="text-danger">*</span></label>
-                                <input type="password" class="form-control <?= isset($errors['password']) ? 'is-invalid' : '' ?>" id="password" name="password" required placeholder="At least 6 characters">
-                                <?php if (isset($errors['password'])): ?><div class="invalid-feedback"><?= e($errors['password']) ?></div><?php endif; ?>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-lock"></i></span>
+                                    <input type="password" class="form-control border-start-0 border-end-0 <?= isset($errors['password']) ? 'is-invalid' : '' ?>" id="password" name="password" required placeholder="At least 6 characters">
+                                    <button class="btn btn-outline-secondary border-start-0 bg-light text-muted px-3" type="button" data-toggle-password="password" title="Show password" style="border-color: var(--border);">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <?php if (isset($errors['password'])): ?><div class="invalid-feedback"><?= e($errors['password']) ?></div><?php endif; ?>
+                                </div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-semibold" for="confirm_password">Confirm Password <span class="text-danger">*</span></label>
-                                <input type="password" class="form-control <?= isset($errors['confirm_password']) ? 'is-invalid' : '' ?>" id="confirm_password" name="confirm_password" required placeholder="Repeat password">
-                                <?php if (isset($errors['confirm_password'])): ?><div class="invalid-feedback"><?= e($errors['confirm_password']) ?></div><?php endif; ?>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-lock-fill"></i></span>
+                                    <input type="password" class="form-control border-start-0 border-end-0 <?= isset($errors['confirm_password']) ? 'is-invalid' : '' ?>" id="confirm_password" name="confirm_password" required placeholder="Repeat password">
+                                    <button class="btn btn-outline-secondary border-start-0 bg-light text-muted px-3" type="button" data-toggle-password="confirm_password" title="Show password" style="border-color: var(--border);">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <?php if (isset($errors['confirm_password'])): ?><div class="invalid-feedback"><?= e($errors['confirm_password']) ?></div><?php endif; ?>
+                                </div>
                             </div>
                         </div>
 

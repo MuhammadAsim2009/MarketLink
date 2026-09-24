@@ -105,7 +105,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     // 2. Insert Order Items & Decrement Inventory
                     $item_stmt = $pdo->prepare("INSERT INTO order_items (order_id, product_id, quantity, price_at_order) VALUES (:oid, :pid, :qty, :price)");
-                    $stock_stmt = $pdo->prepare("UPDATE products SET quantity_available = GREATEST(0, quantity_available - :qty), is_sold_out = IF(quantity_available - :qty <= 0, 1, is_sold_out) WHERE product_id = :pid");
+                    $stock_stmt = $pdo->prepare("UPDATE products 
+                                                 SET quantity_available = GREATEST(0, quantity_available - :qty1), 
+                                                     is_sold_out = CASE WHEN (quantity_available - :qty2) <= 0 THEN 1 ELSE is_sold_out END 
+                                                 WHERE product_id = :pid");
 
                     foreach ($f_data['items'] as $item) {
                         $p = $item['product'];
@@ -119,8 +122,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ]);
 
                         $stock_stmt->execute([
-                            ':qty' => $qty,
-                            ':pid' => $p['product_id']
+                            ':qty1' => $qty,
+                            ':qty2' => $qty,
+                            ':pid'  => $p['product_id']
                         ]);
                     }
 
@@ -141,7 +145,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 redirect(BASE_URL . 'customer/orders.php');
 
             } catch (PDOException $e) {
-                $pdo->rollBack();
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
                 error_log("Order placement transaction failed: " . $e->getMessage());
                 $errors['general'] = 'Failed to place pre-order due to a database error. Please try again.';
             }

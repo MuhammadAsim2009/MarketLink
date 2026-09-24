@@ -95,7 +95,7 @@ if (is_logged_in() && isset($pdo)) {
             <?php else: ?>
                 <!-- Notification Bell -->
                 <a href="<?= BASE_URL ?>notifications.php" class="btn-icon" title="Notifications" style="position:relative;">
-                    <i class="bi bi-bell" style="font-size:.95rem;"></i>
+                    <i class="bi bi-bell"></i>
                     <?php if ($unread_notifs > 0): ?>
                         <span class="notif-count"><?= min($unread_notifs, 9) ?><?= $unread_notifs > 9 ? '+' : '' ?></span>
                     <?php endif; ?>
@@ -103,9 +103,10 @@ if (is_logged_in() && isset($pdo)) {
 
                 <!-- Cart (customers only) -->
                 <?php if ($current_role === ROLE_CUSTOMER): ?>
+                    <?php $cart_count = !empty($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0; ?>
                     <a href="<?= BASE_URL ?>customer/cart.php" class="btn-icon" title="Cart" style="position:relative;">
-                        <i class="bi bi-bag" style="font-size:.95rem;"></i>
-                        <span id="cartCountBadge" class="notif-count" style="display:none;">0</span>
+                        <i class="bi bi-bag"></i>
+                        <span id="cartCountBadge" class="notif-count" style="<?= $cart_count > 0 ? '' : 'display:none;' ?>"><?= $cart_count > 9 ? '9+' : $cart_count ?></span>
                     </a>
                 <?php endif; ?>
 
@@ -120,7 +121,7 @@ if (is_logged_in() && isset($pdo)) {
                     </a>
                 <?php elseif ($current_role === ROLE_CUSTOMER): ?>
                     <a href="<?= BASE_URL ?>customer/dashboard.php" class="btn btn-outline-primary btn-sm hide-mobile">
-                        <i class="bi bi-person"></i> Account
+                        <i class="bi bi-speedometer2"></i> Dashboard
                     </a>
                 <?php endif; ?>
 
@@ -135,9 +136,6 @@ if (is_logged_in() && isset($pdo)) {
                         <div class="dropdown-header"><?= ucfirst(e($current_role)) ?> account</div>
 
                         <?php if ($current_role === ROLE_CUSTOMER): ?>
-                            <a class="dropdown-item" href="<?= BASE_URL ?>customer/dashboard.php">
-                                <i class="bi bi-speedometer"></i> Dashboard
-                            </a>
                             <a class="dropdown-item" href="<?= BASE_URL ?>customer/orders.php">
                                 <i class="bi bi-bag-check"></i> My Orders
                             </a>
@@ -148,9 +146,6 @@ if (is_logged_in() && isset($pdo)) {
                                 <i class="bi bi-star"></i> Reviews
                             </a>
                         <?php elseif ($current_role === ROLE_FARMER): ?>
-                            <a class="dropdown-item" href="<?= BASE_URL ?>farmer/dashboard.php">
-                                <i class="bi bi-speedometer"></i> Dashboard
-                            </a>
                             <a class="dropdown-item" href="<?= BASE_URL ?>farmer/products.php">
                                 <i class="bi bi-box-seam"></i> My Products
                             </a>
@@ -164,9 +159,6 @@ if (is_logged_in() && isset($pdo)) {
                                 <i class="bi bi-star"></i> Reviews
                             </a>
                         <?php elseif ($current_role === ROLE_ADMIN): ?>
-                            <a class="dropdown-item" href="<?= BASE_URL ?>admin/dashboard.php">
-                                <i class="bi bi-speedometer2"></i> Dashboard
-                            </a>
                             <a class="dropdown-item" href="<?= BASE_URL ?>admin/manage-farmers.php">
                                 <i class="bi bi-people"></i> Farmers
                             </a>

@@ -15,22 +15,53 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 /* ── Cart Badge ────────────────────────────────────────────────── */
-function updateCartBadge() {
+function updateCartBadge(customCount) {
     const badge = document.getElementById('cartCountBadge');
     if (!badge) return;
-    try {
-        const cartData = JSON.parse(sessionStorage.getItem('ml_cart') || '{}');
-        const count = Object.values(cartData).reduce((s, v) => s + (parseInt(v) || 0), 0);
-        if (count > 0) {
-            badge.textContent = count > 9 ? '9+' : count;
-            badge.style.display = 'flex';
-        } else {
-            badge.style.display = 'none';
+    let count = 0;
+    if (typeof customCount !== 'undefined') {
+        count = parseInt(customCount, 10) || 0;
+    } else {
+        const textVal = parseInt(badge.textContent, 10);
+        if (!isNaN(textVal)) {
+            count = textVal;
         }
-    } catch (e) {
-        // ignore
+    }
+    if (count > 0) {
+        badge.textContent = count > 9 ? '9+' : count;
+        badge.style.display = 'flex';
+    } else {
+        badge.style.display = 'none';
     }
 }
+window.updateCartBadge = updateCartBadge;
+
+/* ── Global Dynamic Toast Notification ─────────────────────────── */
+function showToast(message, type = 'success') {
+    let wrapper = document.getElementById('flashWrapper');
+    if (!wrapper) {
+        wrapper = document.createElement('div');
+        wrapper.id = 'flashWrapper';
+        wrapper.className = 'flash-wrapper';
+        document.body.appendChild(wrapper);
+    }
+    const iconClass = (type === 'success') ? 'bi-check-circle-fill' : ((type === 'error' || type === 'danger') ? 'bi-x-circle-fill' : 'bi-info-circle-fill');
+    const toast = document.createElement('div');
+    toast.className = `flash-alert ${type === 'danger' ? 'error' : type}`;
+    toast.setAttribute('role', 'alert');
+    toast.innerHTML = `
+        <i class="bi ${iconClass} flash-icon"></i>
+        <span>${message}</span>
+        <span class="flash-close" onclick="this.closest('.flash-alert').remove()">&#x2715;</span>
+    `;
+    wrapper.appendChild(toast);
+    setTimeout(() => {
+        toast.style.transition = 'opacity .4s';
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 400);
+    }, 4000);
+}
+window.showToast = showToast;
 
 /* ── Counter Animation ─────────────────────────────────────────── */
 function animateCounters() {
@@ -109,4 +140,32 @@ document.addEventListener('submit', function (e) {
 /* ── Tooltip Init ──────────────────────────────────────────────── */
 document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
     try { new bootstrap.Tooltip(el, { trigger: 'hover' }); } catch(e) {}
+});
+
+/* ── Global Password Show/Hide Toggle ──────────────────────────── */
+document.addEventListener('click', function (e) {
+    const toggleBtn = e.target.closest('[data-toggle-password]');
+    if (!toggleBtn) return;
+
+    e.preventDefault();
+    const targetId = toggleBtn.getAttribute('data-toggle-password');
+    const input = document.getElementById(targetId);
+    if (!input) return;
+
+    const icon = toggleBtn.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        if (icon) {
+            icon.classList.remove('bi-eye');
+            icon.classList.add('bi-eye-slash');
+        }
+        toggleBtn.setAttribute('title', 'Hide password');
+    } else {
+        input.type = 'password';
+        if (icon) {
+            icon.classList.remove('bi-eye-slash');
+            icon.classList.add('bi-eye');
+        }
+        toggleBtn.setAttribute('title', 'Show password');
+    }
 });

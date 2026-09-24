@@ -14,8 +14,9 @@ Update this file regularly as work happens.
   - Procedural helper library (`includes/functions.php`) with CSRF protection, session flash messages, status badge helpers, and notification utilities.
   - Role-based route guard (`includes/auth-check.php`) enforcing real-time user status (active/pending/suspended) and row-level security.
   - High-end SaaS design system & stylesheet (`assets/css/style.css`) with responsive split-screen auth layouts and earthy design tokens.
-  - Shared responsive header and footer (`includes/header.php`, `includes/footer.php`) with dynamic role-aware navigation and glassmorphism navbar.
-  - Customer & Farmer registration (`auth/register.php`), unified login (`auth/login.php`), admin login (`auth/admin-login.php`), logout (`auth/logout.php`), and tokenized password reset flow (`auth/forgot-password.php`, `auth/reset-password.php`) featuring 2-column SaaS split-screen layouts with brand showcases.
+  - Shared responsive header and footer (`includes/header.php`, `includes/footer.php`) with dynamic role-aware navigation, clean Dashboard shortcut button, non-conflicting z-index layering, centered icon buttons, and glassmorphism navbar.
+  - SaaS Notifications Center (`notifications.php`) with dynamic category avatars (Orders, Accounts, Announcements, Reviews), live filter pills, relative timestamps, single & bulk read/clear controls, and helpful side widgets.
+  - Customer & Farmer registration (`auth/register.php`), unified login (`auth/login.php`), admin login (`auth/admin-login.php`), logout (`auth/logout.php`), and tokenized password reset flow (`auth/forgot-password.php`, `auth/reset-password.php`) featuring 2-column SaaS split-screen layouts with brand showcases and interactive show/hide password toggle buttons on all password fields.
   - Landing page (`index.php`) and role dashboard skeletons.
 
 - **Phase 2: Farmer Module**
@@ -25,13 +26,14 @@ Update this file regularly as work happens.
   - Review Management (`farmer/reviews.php`): Average stall ratings, review feed, and public farmer reply workflow with customer notification triggers.
 
 - **Phase 3: Customer Module**
+  - Customer Hub (`customer/dashboard.php`): SaaS profile greeting bar, ready-for-pickup alert banner, 4 KPI metric cards (Total Pre-Orders, In Progress, Ready, Farm Spend), recent orders feed, and saved favorites quick reorder widget.
   - Farmers Market Discovery (`customer/browse-markets.php`): Interactive OpenStreetMap directory with Leaflet markers, operating days/hours filters, and list of attending farmer stalls.
   - Farmer Stall Detail (`customer/farmer-detail.php`): Full stall branding, location map, weekly harvest catalog, and customer reviews.
   - Harvest Produce Catalog (`customer/browse-products.php`): Search and multi-criteria filters (category, market, farmer, in-stock only, price sort).
   - Produce Detail View (`customer/product-detail.php`): High-res photo view, harvest description, stock availability badge, customer reviews, and quantity selector.
   - Pre-Order Basket (`customer/cart.php`): Item review, live stock capping, quantity adjustments, and subtotal calculation.
   - Multi-Stall Pre-Order Checkout (`customer/checkout.php`): Grouped orders per stall with pickup date/time slot selection, race-condition transaction safety, and instant farmer in-app notifications.
-  - Order Tracking & Reorder (`customer/orders.php`): Status lifecycle tracking, customer cancellation with automated inventory restore, itemized breakdown, and one-click basket reordering.
+  - Order Tracking & Reorder (`customer/orders.php`): SaaS-level metric cards, interactive pill filter toolbar (All, In Progress, Ready, Completed, Cancelled), instant search bar, detailed itemized drawer breakdown, and one-click basket reordering.
   - Saved Favorites (`customer/favorites.php`): Manage favorite farmer stalls and go-to produce items.
   - Reviews & Star Ratings (`customer/reviews.php`): Rating submission (1-5 stars) and review feed displaying farmer stall replies.
 

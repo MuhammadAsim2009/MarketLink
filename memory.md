@@ -15,7 +15,7 @@ Update this file regularly as work happens.
   - Role-based route guard (`includes/auth-check.php`) enforcing real-time user status (active/pending/suspended) and row-level security.
   - Custom design tokens & stylesheet (`assets/css/style.css`) matching `design.md` color scheme (#3D8B47, #2A6334, #E8935A, #FBF9F4, #2B2B28) and typography.
   - Shared responsive header and footer (`includes/header.php`, `includes/footer.php`) with dynamic role-aware navigation.
-  - Customer & Farmer registration (`auth/register.php`), unified login (`auth/login.php`), admin login (`auth/admin-login.php`), logout (`auth/logout.php`), and tokenized password reset flow (`auth/forgot-password.php`, `auth/reset-password.php`).
+  - Customer & Farmer registration (`auth/register.php`), unified login (`auth/login.php`), admin login (`auth/admin-login.php`), logout (`auth/logout.php`), and tokenized password reset flow (`auth/forgot-password.php`, `auth/reset-password.php`) featuring interactive show/hide password toggle buttons on all password fields.
   - Landing page (`index.php`) and role dashboard skeletons.
 
 - **Phase 2: Farmer Module**
