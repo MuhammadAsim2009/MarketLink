@@ -288,9 +288,9 @@ require_once __DIR__ . '/../includes/header.php';
 
                     <div class="row g-3 mb-3">
                         <div class="col-md-4">
-                            <label class="form-label" for="price">Price ($) <span class="text-danger">*</span></label>
+                            <label class="form-label" for="price">Price (PKR) <span class="text-danger">*</span></label>
                             <div class="input-group">
-                                <span class="input-group-text">$</span>
+                                <span class="input-group-text">PKR</span>
                                 <input type="number" step="0.01" min="0.10" class="form-control <?= isset($errors['price']) ? 'is-invalid' : '' ?>" id="price" name="price" value="<?= e($edit_product['price'] ?? ($_POST['price'] ?? '')) ?>" placeholder="0.00" required>
                             </div>
                             <?php if (isset($errors['price'])): ?><div class="text-danger small mt-1"><?= e($errors['price']) ?></div><?php endif; ?>

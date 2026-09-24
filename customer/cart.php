@@ -304,7 +304,7 @@ require_once __DIR__ . '/../includes/header.php';
                         </div>
                         <div class="d-flex justify-content-between mb-3 text-success small">
                             <span>Pre-Order Service Fee:</span>
-                            <span>$0.00 (Free)</span>
+                            <span>PKR 0.00 (Free)</span>
                         </div>
                         <hr class="my-2">
                         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -400,7 +400,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Snap client-side preview for line total
         const lineTotalEl = document.getElementById(`line-total-${pid}`);
         if (lineTotalEl) {
-            lineTotalEl.textContent = '$' + (price * qty).toFixed(2);
+            lineTotalEl.textContent = 'PKR ' + (price * qty).toFixed(2);
         }
 
         // Clear existing debounce timer for this product

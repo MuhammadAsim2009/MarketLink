@@ -10,7 +10,7 @@ Update this file regularly as work happens.
 ## Completed
 - **Phase 1: Auth & Architecture Foundation**
   - Database schema (`sql/schema.sql`) and seed data (`sql/seed-data.sql`) containing complete InnoDB tables and test credentials.
-  - PDO connection configuration (`config/db.php`, `config/db.example.php`) and site constants (`config/constants.php`).
+  - PDO connection configuration (`config/db.php`, `config/db.example.php`) and site constants (`config/constants.php`) with PKR currency standard.
   - Procedural helper library (`includes/functions.php`) with CSRF protection, session flash messages, status badge helpers, and notification utilities.
   - Role-based route guard (`includes/auth-check.php`) enforcing real-time user status (active/pending/suspended) and row-level security.
   - High-end SaaS design system & stylesheet (`assets/css/style.css`) with responsive split-screen auth layouts and earthy design tokens.

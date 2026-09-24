@@ -30,7 +30,7 @@ define('BASE_URL', rtrim($protocol . $host . $basePath, '/') . '/');
 define('ASSETS_URL', BASE_URL . 'assets/');
 
 // Formatting & Currency
-define('CURRENCY_SYMBOL', '$');
+define('CURRENCY_SYMBOL', 'PKR ');
 define('DATE_FORMAT', 'M d, Y');
 define('TIME_FORMAT', 'h:i A');
 define('DATETIME_FORMAT', 'M d, Y h:i A');
