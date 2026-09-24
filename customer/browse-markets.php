@@ -13,7 +13,7 @@ $page_title = 'Find Farmers Markets';
 
 $search_q = sanitize_input($_GET['q'] ?? '');
 $filter_day = sanitize_input($_GET['day'] ?? '');
-$selected_market_id = (int)($_GET['market_id'] ?? 0);
+$selected_market_id = (int)($_GET['market_id'] ?? $_GET['market'] ?? 0);
 
 // Query markets with attending farmers count
 $sql = "SELECT m.*, 

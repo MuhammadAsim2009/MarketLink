@@ -77,10 +77,13 @@ function lazyLoadImages() {
     imgs.forEach(img => obs.observe(img));
 }
 
-/* ── Form Submit Spinner ───────────────────────────────────────── */
+/* ── Form Submit Spinner (POST forms only) ──────────────────────── */
 document.addEventListener('submit', function (e) {
     const form = e.target;
-    const btn  = form.querySelector('[type="submit"]:not([data-no-spin])');
+    if (!form || (form.method && form.method.toLowerCase() === 'get') || form.hasAttribute('data-no-spin')) {
+        return;
+    }
+    const btn = form.querySelector('[type="submit"]:not([data-no-spin])');
     if (!btn || btn.dataset.spinning) return;
     btn.dataset.spinning = '1';
     const orig = btn.innerHTML;

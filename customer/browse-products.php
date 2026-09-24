@@ -14,7 +14,7 @@ $page_title = 'Fresh Harvest & Produce';
 // Filter parameters
 $search_q = sanitize_input($_GET['q'] ?? '');
 $filter_category = sanitize_input($_GET['category'] ?? '');
-$filter_market_id = (int)($_GET['market_id'] ?? 0);
+$filter_market_id = (int)($_GET['market_id'] ?? $_GET['market'] ?? 0);
 $filter_farmer_id = (int)($_GET['farmer_id'] ?? 0);
 $filter_max_price = !empty($_GET['max_price']) ? (float)$_GET['max_price'] : 0;
 $filter_in_stock = isset($_GET['in_stock']) ? (int)$_GET['in_stock'] : 1;
@@ -31,7 +31,7 @@ $sql = "SELECT p.*, u.name as farmer_contact, fp.stall_name, fp.address as stall
 $params = [];
 
 if (!empty($search_q)) {
-    $sql .= " AND (p.name LIKE :q OR p.description LIKE :q OR fp.stall_name LIKE :q)";
+    $sql .= " AND (p.name LIKE :q OR p.description LIKE :q OR fp.stall_name LIKE :q OR p.category LIKE :q)";
     $params[':q'] = '%' . $search_q . '%';
 }
 if (!empty($filter_category)) {

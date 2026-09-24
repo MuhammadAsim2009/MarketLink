@@ -10,6 +10,7 @@ require_once __DIR__ . '/includes/functions.php';
 $active_nav  = 'home';
 $page_title  = 'Farm Fresh, Just a Click Away';
 
+$all_markets      = [];
 $markets          = [];
 $featured_products = [];
 $total_farmers    = 0;
@@ -17,7 +18,8 @@ $total_markets    = 0;
 $total_products   = 0;
 
 try {
-    $markets          = $pdo->query("SELECT * FROM markets ORDER BY market_name ASC LIMIT 3")->fetchAll();
+    $all_markets      = $pdo->query("SELECT * FROM markets ORDER BY market_name ASC")->fetchAll();
+    $markets          = array_slice($all_markets, 0, 3);
     $featured_products = $pdo->query(
         "SELECT p.*, u.name AS farmer_name, fp.stall_name
            FROM products p
@@ -27,7 +29,7 @@ try {
           ORDER BY p.created_at DESC LIMIT 4"
     )->fetchAll();
     $total_farmers  = (int)$pdo->query("SELECT COUNT(*) FROM users WHERE role='farmer' AND status='active'")->fetchColumn();
-    $total_markets  = (int)$pdo->query("SELECT COUNT(*) FROM markets")->fetchColumn();
+    $total_markets  = count($all_markets);
     $total_products = (int)$pdo->query("SELECT COUNT(*) FROM products WHERE is_sold_out = 0")->fetchColumn();
 } catch (PDOException $e) {
     error_log("Landing page data error: " . $e->getMessage());
@@ -86,30 +88,43 @@ require_once __DIR__ . '/includes/header.php';
                         <span class="live-dot">Live inventory</span>
                     </div>
                     <div class="hero-widget-body">
-                        <form action="<?= BASE_URL ?>customer/browse-products.php" method="GET">
+                        <form action="<?= BASE_URL ?>customer/browse-products.php" method="GET" data-no-spin>
                             <div class="mb-3">
-                                <label class="form-label">What are you looking for?</label>
+                                <label class="form-label" for="home-q">What are you looking for?</label>
                                 <div class="input-group" style="gap:0;">
                                     <span style="display:flex;align-items:center;padding:0 .875rem;background:var(--surface-2);border:1.5px solid var(--border);border-right:none;border-radius:var(--radius-sm) 0 0 var(--radius-sm);color:var(--text-3);">
                                         <i class="bi bi-search"></i>
                                     </span>
-                                    <input type="text" name="q" class="form-control"
+                                    <input type="text" id="home-q" name="q" class="form-control"
                                            placeholder="Tomatoes, eggs, berries…"
                                            style="border-radius:0 var(--radius-sm) var(--radius-sm) 0; border-left:none;">
                                 </div>
                             </div>
-                            <div class="mb-4">
-                                <label class="form-label">Category</label>
-                                <select name="category" class="form-select">
-                                    <option value="">All categories</option>
-                                    <option value="Vegetables">🥦 Organic Vegetables</option>
-                                    <option value="Fruits">🍓 Fresh Orchard Fruits</option>
-                                    <option value="Dairy &amp; Eggs">🥚 Dairy &amp; Pasture Eggs</option>
-                                    <option value="Bakery &amp; Honey">🍯 Artisanal Bakery &amp; Honey</option>
-                                </select>
+                            <div class="row g-2 mb-3">
+                                <div class="col-sm-6">
+                                    <label class="form-label" for="home-cat">Category</label>
+                                    <select id="home-cat" name="category" class="form-select">
+                                        <option value="">All categories</option>
+                                        <option value="Vegetables">🥦 Vegetables</option>
+                                        <option value="Fruits">🍓 Fruits</option>
+                                        <option value="Dairy &amp; Eggs">🥚 Dairy &amp; Eggs</option>
+                                        <option value="Bakery &amp; Honey">🍯 Bakery &amp; Honey</option>
+                                        <option value="Herbs &amp; Microgreens">🌿 Herbs &amp; Greens</option>
+                                        <option value="Pantry &amp; Preserves">🥫 Pantry &amp; Preserves</option>
+                                    </select>
+                                </div>
+                                <div class="col-sm-6">
+                                    <label class="form-label" for="home-market">Market</label>
+                                    <select id="home-market" name="market_id" class="form-select">
+                                        <option value="">All markets</option>
+                                        <?php foreach ($all_markets as $am): ?>
+                                            <option value="<?= (int)$am['market_id'] ?>"><?= e($am['market_name']) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
                             </div>
-                            <button type="submit" class="btn btn-accent w-100 btn-lg">
-                                <i class="bi bi-arrow-right-circle"></i> Search Harvest
+                            <button type="submit" class="btn btn-accent w-100 btn-lg" data-no-spin>
+                                <i class="bi bi-arrow-right-circle me-1"></i> Search Harvest
                             </button>
                         </form>
 
