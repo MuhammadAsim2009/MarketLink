@@ -51,9 +51,9 @@
 
             <!-- Project Info -->
             <div class="col-lg-4 col-md-6 footer-col">
-                <h6>TechWiz 7 · Aptech</h6>
+                <h6>About MarketLink</h6>
                 <p class="mb-3">
-                    An academic platform project developed for the Aptech TechWiz 7 national competition. Built with a zero-food-waste mission in mind.
+                    A digital community platform connecting local sustainable growers directly with neighborhood shoppers. Built with a zero-food-waste mission.
                 </p>
                 <a href="<?= BASE_URL ?>auth/admin-login.php"
                    style="display:inline-flex;align-items:center;gap:6px;color:rgba(255,255,255,.55);font-size:.8rem;border:1px solid rgba(255,255,255,.12);padding:.35rem .75rem;border-radius:var(--radius-sm);transition:all var(--transition);"

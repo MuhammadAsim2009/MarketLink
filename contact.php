@@ -23,7 +23,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (empty($name) || empty($email) || empty($message)) {
             set_flash('danger', 'Please complete all required fields.');
         } else {
-            // In a live system, this would send an email or store inquiry. For TechWiz 7, confirm delivery.
             set_flash('success', "Thank you {$name}! Your message regarding '{$subject}' has been received. Our team will get back to you shortly.");
             $submitted = true;
         }
@@ -81,7 +80,7 @@ require_once __DIR__ . '/includes/header.php';
                 <div class="card shadow-sm border-0 p-4 bg-white">
                     <h5 class="fw-bold mb-3"><i class="bi bi-info-circle text-primary me-2"></i>Platform Information</h5>
                     <div class="d-flex flex-column gap-2 small text-muted">
-                        <div><i class="bi bi-geo-alt-fill text-danger me-2"></i> <strong>Headquarters:</strong> Aptech TechWiz 7 Project Lab, Main Campus</div>
+                        <div><i class="bi bi-geo-alt-fill text-danger me-2"></i> <strong>Headquarters:</strong> MarketLink Community Hub, Heritage Plaza</div>
                         <div><i class="bi bi-envelope-fill text-primary me-2"></i> <strong>Email:</strong> support@marketlink.test</div>
                         <div><i class="bi bi-telephone-fill text-success me-2"></i> <strong>Helpline:</strong> +92 (300) 123-4567</div>
                         <div><i class="bi bi-clock-fill text-warning me-2"></i> <strong>Support Hours:</strong> Monday – Saturday (08:00 AM – 06:00 PM)</div>

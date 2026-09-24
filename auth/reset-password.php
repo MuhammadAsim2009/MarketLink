@@ -84,20 +84,21 @@ $page_title = 'Set New Password';
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
-<div class="container py-5">
-    <div class="card auth-card">
+<div class="auth-container" style="max-width: 520px;">
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
         <div class="card-body p-4 p-md-5">
             <div class="text-center mb-4">
                 <div class="d-inline-flex p-3 rounded-circle bg-primary-subtle text-primary mb-2">
                     <i class="bi bi-shield-lock fs-3"></i>
                 </div>
-                <h1 class="h3 brand-font">Create New Password</h1>
-                <p class="text-muted small">Choose a strong password for your account</p>
+                <h1 class="h3 fw-bold">Create New Password</h1>
+                <p class="text-muted small">Choose a strong, secure password for your account</p>
             </div>
 
             <?php if (!empty($token_error)): ?>
-                <div class="alert alert-danger py-3 mb-4">
-                    <i class="bi bi-exclamation-octagon me-1"></i> <?= e($token_error) ?>
+                <div class="alert alert-danger py-3 mb-4 d-flex align-items-center gap-2">
+                    <i class="bi bi-exclamation-octagon flex-shrink-0"></i>
+                    <div><?= e($token_error) ?></div>
                 </div>
                 <div class="text-center">
                     <a href="<?= BASE_URL ?>auth/forgot-password.php" class="btn btn-primary btn-sm">
@@ -106,7 +107,10 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
             <?php else: ?>
                 <?php if (!empty($error)): ?>
-                    <div class="alert alert-danger py-2 small mb-3"><?= e($error) ?></div>
+                    <div class="alert alert-danger py-2 small mb-4 d-flex align-items-center gap-2">
+                        <i class="bi bi-exclamation-triangle-fill flex-shrink-0"></i>
+                        <div><?= e($error) ?></div>
+                    </div>
                 <?php endif; ?>
 
                 <form action="<?= BASE_URL ?>auth/reset-password.php" method="POST" novalidate>
@@ -114,17 +118,23 @@ require_once __DIR__ . '/../includes/header.php';
                     <input type="hidden" name="token" value="<?= e($token) ?>">
 
                     <div class="mb-3">
-                        <label class="form-label" for="password">New Password</label>
-                        <input type="password" class="form-control" id="password" name="password" required placeholder="At least 6 characters" autofocus>
+                        <label class="form-label small fw-semibold" for="password">New Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted"><i class="bi bi-lock"></i></span>
+                            <input type="password" class="form-control" id="password" name="password" required placeholder="At least 6 characters" autofocus>
+                        </div>
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label" for="confirm_password">Confirm New Password</label>
-                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required placeholder="Repeat new password">
+                        <label class="form-label small fw-semibold" for="confirm_password">Confirm New Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted"><i class="bi bi-lock-fill"></i></span>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required placeholder="Repeat new password">
+                        </div>
                     </div>
 
-                    <button type="submit" class="btn btn-primary w-100 py-2 mb-3">
-                        <i class="bi bi-check2-circle me-1"></i> Update Password
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold mb-3">
+                        <i class="bi bi-check2-circle me-1"></i> Update Password &amp; Log In
                     </button>
                 </form>
             <?php endif; ?>

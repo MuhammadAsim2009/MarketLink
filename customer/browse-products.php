@@ -31,8 +31,11 @@ $sql = "SELECT p.*, u.name as farmer_contact, fp.stall_name, fp.address as stall
 $params = [];
 
 if (!empty($search_q)) {
-    $sql .= " AND (p.name LIKE :q OR p.description LIKE :q OR fp.stall_name LIKE :q OR p.category LIKE :q)";
-    $params[':q'] = '%' . $search_q . '%';
+    $sql .= " AND (p.name LIKE :q1 OR p.description LIKE :q2 OR fp.stall_name LIKE :q3 OR p.category LIKE :q4)";
+    $params[':q1'] = '%' . $search_q . '%';
+    $params[':q2'] = '%' . $search_q . '%';
+    $params[':q3'] = '%' . $search_q . '%';
+    $params[':q4'] = '%' . $search_q . '%';
 }
 if (!empty($filter_category)) {
     $sql .= " AND p.category = :cat";

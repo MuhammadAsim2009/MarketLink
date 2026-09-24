@@ -17,7 +17,7 @@ require_once __DIR__ . '/includes/header.php';
     <div class="container py-3">
         <div class="max-w-700 mx-auto text-center">
             <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill fw-semibold mb-3">
-                <i class="bi bi-patch-check-fill me-1"></i> Aptech TechWiz 7 Competition Entry
+                <i class="bi bi-patch-check-fill me-1"></i> Sustainable Local Commerce
             </span>
             <h1 class="display-5 fw-bold mb-3">Connecting Local Growers With Conscious Communities</h1>
             <p class="lead text-muted mb-0">
@@ -58,31 +58,43 @@ require_once __DIR__ . '/includes/header.php';
             </div>
 
             <div class="col-lg-6">
-                <div class="card shadow border-0 rounded-4 p-4 bg-light">
-                    <h5 class="fw-bold mb-3"><i class="bi bi-code-slash text-primary me-2"></i>TechWiz 7 Project Architecture</h5>
+                <div class="card shadow-sm border-0 rounded-4 p-4 bg-light">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-shield-check text-primary me-2"></i>Why Communities Choose MarketLink</h5>
                     <ul class="list-unstyled d-flex flex-column gap-3 mb-0 small">
-                        <li class="d-flex gap-2">
-                            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                        <li class="d-flex gap-3 align-items-start">
+                            <div class="p-2 bg-success-subtle text-success rounded-3 mt-1">
+                                <i class="bi bi-patch-check-fill fs-5"></i>
+                            </div>
                             <div>
-                                <strong>Plain PHP Backend:</strong> Procedural function-based architecture adhering strictly to Aptech standards without external framework overhead.
+                                <strong class="d-block text-dark fs-6 mb-1">100% Verified Local Growers</strong>
+                                <span class="text-muted">Every stall is an authentic regional farmer or artisanal baker. You know exactly who grows your food and where it comes from.</span>
                             </div>
                         </li>
-                        <li class="d-flex gap-2">
-                            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                        <li class="d-flex gap-3 align-items-start">
+                            <div class="p-2 bg-primary-subtle text-primary rounded-3 mt-1">
+                                <i class="bi bi-bag-check-fill fs-5"></i>
+                            </div>
                             <div>
-                                <strong>Secure PDO & Prepared Statements:</strong> 100% parameter-bound queries, zero concatenated SQL, with strict row-level security.
+                                <strong class="d-block text-dark fs-6 mb-1">Guaranteed Harvest Pre-Orders</strong>
+                                <span class="text-muted">No more arriving at weekend markets only to find popular berries, greens, or farm eggs sold out. Lock in your basket beforehand.</span>
                             </div>
                         </li>
-                        <li class="d-flex gap-2">
-                            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                        <li class="d-flex gap-3 align-items-start">
+                            <div class="p-2 bg-warning-subtle text-warning-emphasis rounded-3 mt-1">
+                                <i class="bi bi-tag-fill fs-5"></i>
+                            </div>
                             <div>
-                                <strong>OpenStreetMap & Leaflet.js:</strong> Free, open-source map geocoding for market discovery without API key or billing limitations.
+                                <strong class="d-block text-dark fs-6 mb-1">Fair, Direct-From-Farm Pricing</strong>
+                                <span class="text-muted">By cutting out middleman distributors and supermarkets, farmers earn their fair share and shoppers enjoy fresher food for better value.</span>
                             </div>
                         </li>
-                        <li class="d-flex gap-2">
-                            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                        <li class="d-flex gap-3 align-items-start">
+                            <div class="p-2 bg-info-subtle text-info rounded-3 mt-1">
+                                <i class="bi bi-geo-alt-fill fs-5"></i>
+                            </div>
                             <div>
-                                <strong>Custom Natural Design System:</strong> Earthy palette (#3D8B47 Fresh Green, #E8935A Harvest Accent) with Poppins and Inter typography.
+                                <strong class="d-block text-dark fs-6 mb-1">Interactive Market Discovery</strong>
+                                <span class="text-muted">Easily find community markets near your neighborhood, see live stall lists, check operating hours, and view exact stall locations on the map.</span>
                             </div>
                         </li>
                     </ul>

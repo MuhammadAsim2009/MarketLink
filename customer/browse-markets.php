@@ -24,8 +24,9 @@ $sql = "SELECT m.*,
 $params = [];
 
 if (!empty($search_q)) {
-    $sql .= " AND (m.market_name LIKE :q OR m.address LIKE :q)";
-    $params[':q'] = '%' . $search_q . '%';
+    $sql .= " AND (m.market_name LIKE :q1 OR m.address LIKE :q2)";
+    $params[':q1'] = '%' . $search_q . '%';
+    $params[':q2'] = '%' . $search_q . '%';
 }
 if (!empty($filter_day)) {
     $sql .= " AND m.operating_days LIKE :day";

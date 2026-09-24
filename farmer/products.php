@@ -205,8 +205,9 @@ if (!empty($filter_cat)) {
     $params[':category'] = $filter_cat;
 }
 if (!empty($search_q)) {
-    $sql .= " AND (name LIKE :q OR description LIKE :q)";
-    $params[':q'] = '%' . $search_q . '%';
+    $sql .= " AND (name LIKE :q1 OR description LIKE :q2)";
+    $params[':q1'] = '%' . $search_q . '%';
+    $params[':q2'] = '%' . $search_q . '%';
 }
 $sql .= " ORDER BY created_at DESC";
 

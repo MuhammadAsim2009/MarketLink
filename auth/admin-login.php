@@ -60,20 +60,20 @@ $page_title = 'Admin Portal Login';
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
-<div class="container py-5">
-    <div class="card auth-card border-dark-subtle shadow">
-        <div class="card-body p-4 p-md-5">
-            <div class="text-center mb-4">
-                <div class="d-inline-flex p-3 rounded-circle bg-dark text-white mb-2">
-                    <i class="bi bi-shield-lock-fill fs-3"></i>
-                </div>
-                <h1 class="h3 brand-font">Administrator Portal</h1>
-                <p class="text-muted small">Authorized personnel only — TechWiz 7 Platform Management</p>
+<div class="auth-container" style="max-width: 500px;">
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="bg-dark text-white p-4 text-center">
+            <div class="d-inline-flex p-3 rounded-circle bg-white bg-opacity-10 text-white mb-2">
+                <i class="bi bi-shield-lock-fill fs-3"></i>
             </div>
-
+            <h1 class="h4 fw-bold mb-1 text-white">Administrator Portal</h1>
+            <p class="text-white-50 small mb-0">Authorized personnel only — MarketLink Platform</p>
+        </div>
+        <div class="card-body p-4 p-md-5">
             <?php if (!empty($error)): ?>
-                <div class="alert alert-danger py-2 small mb-3">
-                    <i class="bi bi-shield-exclamation me-1"></i> <?= e($error) ?>
+                <div class="alert alert-danger py-2 small mb-4 d-flex align-items-center gap-2">
+                    <i class="bi bi-shield-exclamation flex-shrink-0"></i>
+                    <div><?= e($error) ?></div>
                 </div>
             <?php endif; ?>
 
@@ -81,20 +81,26 @@ require_once __DIR__ . '/../includes/header.php';
                 <?= csrf_field() ?>
 
                 <div class="mb-3">
-                    <label class="form-label" for="email">Admin Email</label>
-                    <input type="email" class="form-control" id="email" name="email" value="<?= e($email_val ?: 'admin@marketlink.test') ?>" required autofocus>
+                    <label class="form-label small fw-semibold" for="email">Admin Email</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light text-muted"><i class="bi bi-person-badge"></i></span>
+                        <input type="email" class="form-control" id="email" name="email" value="<?= e($email_val ?: 'admin@marketlink.test') ?>" required autofocus>
+                    </div>
                 </div>
 
                 <div class="mb-4">
-                    <label class="form-label" for="password">Admin Password</label>
-                    <input type="password" class="form-control" id="password" name="password" required placeholder="Enter admin password">
+                    <label class="form-label small fw-semibold" for="password">Admin Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light text-muted"><i class="bi bi-key"></i></span>
+                        <input type="password" class="form-control" id="password" name="password" required placeholder="Enter admin password">
+                    </div>
                 </div>
 
-                <button type="submit" class="btn btn-dark w-100 py-2 mb-3">
-                    <i class="bi bi-lock me-1"></i> Secure Admin Sign In
+                <button type="submit" class="btn btn-dark w-100 py-2 fw-semibold mb-3">
+                    <i class="bi bi-lock-fill me-1"></i> Secure Admin Sign In
                 </button>
 
-                <div class="p-2 bg-light rounded text-center small text-muted">
+                <div class="p-2 bg-light rounded text-center small text-muted border">
                     Default Credentials: <code>admin@marketlink.test</code> / <code>Admin@123</code>
                 </div>
             </form>

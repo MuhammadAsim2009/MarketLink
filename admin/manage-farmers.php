@@ -64,8 +64,11 @@ if ($status_filter !== 'all' && !empty($status_filter)) {
     $params[':status'] = $status_filter;
 }
 if (!empty($search_q)) {
-    $sql .= " AND (u.name LIKE :q OR u.email LIKE :q OR fp.stall_name LIKE :q OR fp.address LIKE :q)";
-    $params[':q'] = '%' . $search_q . '%';
+    $sql .= " AND (u.name LIKE :q1 OR u.email LIKE :q2 OR fp.stall_name LIKE :q3 OR fp.address LIKE :q4)";
+    $params[':q1'] = '%' . $search_q . '%';
+    $params[':q2'] = '%' . $search_q . '%';
+    $params[':q3'] = '%' . $search_q . '%';
+    $params[':q4'] = '%' . $search_q . '%';
 }
 $sql .= " ORDER BY (u.status = 'pending') DESC, u.created_at DESC";
 

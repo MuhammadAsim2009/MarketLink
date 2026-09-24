@@ -143,131 +143,190 @@ $page_title = 'Create an Account';
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
-<div class="container py-4">
-    <div class="card auth-card">
-        <div class="card-body p-4 p-md-5">
-            <div class="text-center mb-4">
-                <div class="d-inline-flex p-3 rounded-circle bg-primary-subtle text-primary mb-2">
-                    <i class="bi bi-person-plus-fill fs-3"></i>
+<div class="auth-container" style="max-width: 1180px;">
+    <div class="auth-split-card">
+        <div class="row g-0">
+            <!-- Left Showcase Banner -->
+            <div class="col-lg-5 d-none d-lg-block">
+                <div class="auth-showcase">
+                    <div>
+                        <div class="auth-showcase-badge">
+                            <i class="bi bi-people-fill text-warning"></i> Community Platform
+                        </div>
+                        <h2>Join the Farm-Fresh Movement.</h2>
+                        <p class="lead-text">
+                            Whether you are a local food lover or an independent farmer, MarketLink gives you direct control over your weekend market experience.
+                        </p>
+                        
+                        <div class="auth-features-list">
+                            <div class="auth-feature-item">
+                                <div class="auth-feature-icon">
+                                    <i class="bi bi-bag-heart-fill"></i>
+                                </div>
+                                <div class="auth-feature-text">
+                                    <h6>For Neighborhood Shoppers</h6>
+                                    <p>Secure rare harvest drops, skip weekend lines, and enjoy fresh food with zero distributor markup.</p>
+                                </div>
+                            </div>
+                            <div class="auth-feature-item">
+                                <div class="auth-feature-icon">
+                                    <i class="bi bi-shop"></i>
+                                </div>
+                                <div class="auth-feature-text">
+                                    <h6>For Independent Growers</h6>
+                                    <p>Eliminate food waste by harvesting exact pre-ordered batches and building a loyal local customer base.</p>
+                                </div>
+                            </div>
+                            <div class="auth-feature-item">
+                                <div class="auth-feature-icon">
+                                    <i class="bi bi-shield-lock-fill"></i>
+                                </div>
+                                <div class="auth-feature-text">
+                                    <h6>Verified & Secure</h6>
+                                    <p>All stalls and accounts are vetted to ensure genuine, local, sustainable agriculture.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Trust Stats Box -->
+                    <div class="auth-trust-box">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="small fw-bold text-white"><i class="bi bi-tree-fill text-success me-1"></i> Sustainable Impact</span>
+                            <span class="badge bg-success text-white py-1 px-2">Zero Waste</span>
+                        </div>
+                        <p class="auth-trust-quote mb-0">Over 98% of pre-orders collected on time with zero unsold produce discarded.</p>
+                    </div>
                 </div>
-                <h1 class="h3 brand-font">Join MarketLink</h1>
-                <p class="text-muted small">Sign up to buy farm-fresh goods or sell your local harvest</p>
             </div>
 
-            <?php if (!empty($errors['general'])): ?>
-                <div class="alert alert-danger py-2 small mb-3"><?= e($errors['general']) ?></div>
-            <?php endif; ?>
-
-            <!-- Role Switcher Tabs -->
-            <ul class="nav nav-pills nav-fill mb-4 p-1 bg-light rounded border">
-                <li class="nav-item">
-                    <button type="button" class="nav-link py-2 <?= $form_data['role'] === ROLE_CUSTOMER ? 'active' : '' ?>" id="tab-customer" onclick="setRole('customer')">
-                        <i class="bi bi-bag-heart me-1"></i> I am a Customer
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button type="button" class="nav-link py-2 <?= $form_data['role'] === ROLE_FARMER ? 'active' : '' ?>" id="tab-farmer" onclick="setRole('farmer')">
-                        <i class="bi bi-shop me-1"></i> I am a Farmer / Stall
-                    </button>
-                </li>
-            </ul>
-
-            <form action="<?= BASE_URL ?>auth/register.php" method="POST" id="registerForm" novalidate>
-                <?= csrf_field() ?>
-                <input type="hidden" name="role" id="roleInput" value="<?= e($form_data['role']) ?>">
-
-                <!-- Common User Fields -->
-                <div class="mb-3">
-                    <label class="form-label" for="name"><span id="nameLabel"><?= $form_data['role'] === ROLE_FARMER ? 'Contact Person Name' : 'Full Name' ?></span> <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control <?= isset($errors['name']) ? 'is-invalid' : '' ?>" id="name" name="name" value="<?= e($form_data['name']) ?>" required placeholder="e.g. John Doe">
-                    <?php if (isset($errors['name'])): ?><div class="invalid-feedback"><?= e($errors['name']) ?></div><?php endif; ?>
-                </div>
-
-                <div class="row g-2 mb-3">
-                    <div class="col-md-6">
-                        <label class="form-label" for="email">Email Address <span class="text-danger">*</span></label>
-                        <input type="email" class="form-control <?= isset($errors['email']) ? 'is-invalid' : '' ?>" id="email" name="email" value="<?= e($form_data['email']) ?>" required placeholder="name@example.com">
-                        <?php if (isset($errors['email'])): ?><div class="invalid-feedback"><?= e($errors['email']) ?></div><?php endif; ?>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label" for="phone">Phone Number</label>
-                        <input type="tel" class="form-control <?= isset($errors['phone']) ? 'is-invalid' : '' ?>" id="phone" name="phone" value="<?= e($form_data['phone']) ?>" placeholder="03001234567">
-                    </div>
-                </div>
-
-                <!-- Farmer-Specific Section -->
-                <div id="farmerFields" style="<?= $form_data['role'] === ROLE_FARMER ? '' : 'display: none;' ?>">
-                    <hr class="my-3 text-secondary-subtle">
-                    <h6 class="text-primary fw-bold mb-3"><i class="bi bi-shop me-1"></i> Stall & Pickup Configuration</h6>
-
-                    <div class="mb-3">
-                        <label class="form-label" for="stall_name">Stall / Farm Brand Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control <?= isset($errors['stall_name']) ? 'is-invalid' : '' ?>" id="stall_name" name="stall_name" value="<?= e($form_data['stall_name']) ?>" placeholder="e.g. Green Valley Organics (Stall #5)">
-                        <?php if (isset($errors['stall_name'])): ?><div class="invalid-feedback"><?= e($errors['stall_name']) ?></div><?php endif; ?>
+            <!-- Right Form Section -->
+            <div class="col-lg-7">
+                <div class="auth-form-side" style="padding: 3rem 2.5rem;">
+                    <div class="auth-form-header mb-3">
+                        <div class="d-inline-flex p-2 rounded-3 bg-primary-subtle text-primary mb-2">
+                            <i class="bi bi-person-plus fs-4"></i>
+                        </div>
+                        <h1 class="h3 fw-bold">Create Your Account</h1>
+                        <p class="text-muted small mb-0">Select your account type to get started with MarketLink</p>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label" for="address">Stall Location / Farm Address <span class="text-danger">*</span></label>
-                        <textarea class="form-control <?= isset($errors['address']) ? 'is-invalid' : '' ?>" id="address" name="address" rows="2" placeholder="e.g. Central Market Plaza, Row B, Stall 12"><?= e($form_data['address']) ?></textarea>
-                        <?php if (isset($errors['address'])): ?><div class="invalid-feedback"><?= e($errors['address']) ?></div><?php endif; ?>
+                    <?php if (!empty($errors['general'])): ?>
+                        <div class="alert alert-danger py-2 small mb-3 d-flex align-items-center gap-2">
+                            <i class="bi bi-exclamation-triangle-fill flex-shrink-0"></i>
+                            <div><?= e($errors['general']) ?></div>
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- Role Switcher Tabs -->
+                    <div class="auth-role-tabs mb-4">
+                        <button type="button" class="btn-role <?= $form_data['role'] === ROLE_CUSTOMER ? 'active' : '' ?>" id="tab-customer" onclick="setRole('customer')">
+                            <i class="bi bi-bag-heart me-1"></i> I am a Customer
+                        </button>
+                        <button type="button" class="btn-role <?= $form_data['role'] === ROLE_FARMER ? 'active' : '' ?>" id="tab-farmer" onclick="setRole('farmer')">
+                            <i class="bi bi-shop me-1"></i> I am a Farmer / Stall
+                        </button>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label d-block">Operating Days</label>
-                        <div class="d-flex flex-wrap gap-3">
-                            <?php 
-                            $all_days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-                            $selected_days = is_array($form_data['operating_days']) ? $form_data['operating_days'] : explode(',', $form_data['operating_days']);
-                            foreach ($all_days as $day): 
-                            ?>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="operating_days[]" value="<?= $day ?>" id="day_<?= $day ?>" <?= in_array($day, $selected_days) ? 'checked' : '' ?>>
-                                    <label class="form-check-label small" for="day_<?= $day ?>"><?= $day ?></label>
+                    <form action="<?= BASE_URL ?>auth/register.php" method="POST" id="registerForm" novalidate>
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="role" id="roleInput" value="<?= e($form_data['role']) ?>">
+
+                        <!-- Common User Fields -->
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold" for="name"><span id="nameLabel"><?= $form_data['role'] === ROLE_FARMER ? 'Contact Person Name' : 'Full Name' ?></span> <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control <?= isset($errors['name']) ? 'is-invalid' : '' ?>" id="name" name="name" value="<?= e($form_data['name']) ?>" required placeholder="e.g. John Doe">
+                            <?php if (isset($errors['name'])): ?><div class="invalid-feedback"><?= e($errors['name']) ?></div><?php endif; ?>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold" for="email">Email Address <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control <?= isset($errors['email']) ? 'is-invalid' : '' ?>" id="email" name="email" value="<?= e($form_data['email']) ?>" required placeholder="name@example.com">
+                                <?php if (isset($errors['email'])): ?><div class="invalid-feedback"><?= e($errors['email']) ?></div><?php endif; ?>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold" for="phone">Phone Number</label>
+                                <input type="tel" class="form-control <?= isset($errors['phone']) ? 'is-invalid' : '' ?>" id="phone" name="phone" value="<?= e($form_data['phone']) ?>" placeholder="03001234567">
+                            </div>
+                        </div>
+
+                        <!-- Farmer-Specific Section -->
+                        <div id="farmerFields" style="<?= $form_data['role'] === ROLE_FARMER ? '' : 'display: none;' ?>">
+                            <div class="p-3 bg-light rounded-3 border mb-3">
+                                <h6 class="text-primary fw-bold mb-3 small text-uppercase letter-spacing-1">
+                                    <i class="bi bi-shop me-1"></i> Stall &amp; Pickup Details
+                                </h6>
+
+                                <div class="mb-3">
+                                    <label class="form-label small fw-semibold" for="stall_name">Farm / Stall Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control form-control-sm <?= isset($errors['stall_name']) ? 'is-invalid' : '' ?>" id="stall_name" name="stall_name" value="<?= e($form_data['stall_name']) ?>" placeholder="e.g. Green Valley Organics (Stall #5)">
+                                    <?php if (isset($errors['stall_name'])): ?><div class="invalid-feedback"><?= e($errors['stall_name']) ?></div><?php endif; ?>
                                 </div>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
 
-                    <div class="row g-2 mb-3">
-                        <div class="col-md-4">
-                            <label class="form-label" for="pickup_window_start">Pickup Start</label>
-                            <input type="time" class="form-control" id="pickup_window_start" name="pickup_window_start" value="<?= e($form_data['pickup_window_start']) ?>">
+                                <div class="mb-3">
+                                    <label class="form-label small fw-semibold" for="address">Stall Location Address <span class="text-danger">*</span></label>
+                                    <textarea class="form-control form-control-sm <?= isset($errors['address']) ? 'is-invalid' : '' ?>" id="address" name="address" rows="2" placeholder="e.g. Central Market Plaza, Row B, Stall 12"><?= e($form_data['address']) ?></textarea>
+                                    <?php if (isset($errors['address'])): ?><div class="invalid-feedback"><?= e($errors['address']) ?></div><?php endif; ?>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label small fw-semibold d-block">Operating Days</label>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <?php 
+                                        $all_days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                                        $selected_days = is_array($form_data['operating_days']) ? $form_data['operating_days'] : explode(',', $form_data['operating_days']);
+                                        foreach ($all_days as $day): 
+                                        ?>
+                                            <div class="form-check form-check-inline m-0">
+                                                <input class="form-check-input" type="checkbox" name="operating_days[]" value="<?= $day ?>" id="day_<?= $day ?>" <?= in_array($day, $selected_days) ? 'checked' : '' ?>>
+                                                <label class="form-check-label small" for="day_<?= $day ?>"><?= $day ?></label>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+
+                                <div class="row g-2">
+                                    <div class="col-4">
+                                        <label class="form-label small" for="pickup_window_start">Pickup Start</label>
+                                        <input type="time" class="form-control form-control-sm" id="pickup_window_start" name="pickup_window_start" value="<?= e($form_data['pickup_window_start']) ?>">
+                                    </div>
+                                    <div class="col-4">
+                                        <label class="form-label small" for="pickup_window_end">Pickup End</label>
+                                        <input type="time" class="form-control form-control-sm" id="pickup_window_end" name="pickup_window_end" value="<?= e($form_data['pickup_window_end']) ?>">
+                                    </div>
+                                    <div class="col-4">
+                                        <label class="form-label small" for="order_cutoff_hours" title="Minimum hours required before pickup slot">Cutoff (Hours)</label>
+                                        <input type="number" min="1" max="72" class="form-control form-control-sm" id="order_cutoff_hours" name="order_cutoff_hours" value="<?= e($form_data['order_cutoff_hours']) ?>">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label" for="pickup_window_end">Pickup End</label>
-                            <input type="time" class="form-control" id="pickup_window_end" name="pickup_window_end" value="<?= e($form_data['pickup_window_end']) ?>">
+
+                        <!-- Passwords -->
+                        <div class="row g-2 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold" for="password">Password <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control <?= isset($errors['password']) ? 'is-invalid' : '' ?>" id="password" name="password" required placeholder="At least 6 characters">
+                                <?php if (isset($errors['password'])): ?><div class="invalid-feedback"><?= e($errors['password']) ?></div><?php endif; ?>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold" for="confirm_password">Confirm Password <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control <?= isset($errors['confirm_password']) ? 'is-invalid' : '' ?>" id="confirm_password" name="confirm_password" required placeholder="Repeat password">
+                                <?php if (isset($errors['confirm_password'])): ?><div class="invalid-feedback"><?= e($errors['confirm_password']) ?></div><?php endif; ?>
+                            </div>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label" for="order_cutoff_hours" title="Minimum hours required before pickup slot">Cutoff (Hours)</label>
-                            <input type="number" min="1" max="72" class="form-control" id="order_cutoff_hours" name="order_cutoff_hours" value="<?= e($form_data['order_cutoff_hours']) ?>">
+
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold mb-3">
+                            <i class="bi bi-check-circle me-1"></i> Complete Registration
+                        </button>
+
+                        <div class="text-center small text-muted">
+                            Already have an account? <a href="<?= BASE_URL ?>auth/login.php" class="fw-bold text-primary">Log In here</a>
                         </div>
-                    </div>
+                    </form>
                 </div>
-
-                <hr class="my-3 text-secondary-subtle">
-
-                <!-- Passwords -->
-                <div class="row g-2 mb-4">
-                    <div class="col-md-6">
-                        <label class="form-label" for="password">Password <span class="text-danger">*</span></label>
-                        <input type="password" class="form-control <?= isset($errors['password']) ? 'is-invalid' : '' ?>" id="password" name="password" required placeholder="At least 6 characters">
-                        <?php if (isset($errors['password'])): ?><div class="invalid-feedback"><?= e($errors['password']) ?></div><?php endif; ?>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label" for="confirm_password">Confirm Password <span class="text-danger">*</span></label>
-                        <input type="password" class="form-control <?= isset($errors['confirm_password']) ? 'is-invalid' : '' ?>" id="confirm_password" name="confirm_password" required placeholder="Repeat password">
-                        <?php if (isset($errors['confirm_password'])): ?><div class="invalid-feedback"><?= e($errors['confirm_password']) ?></div><?php endif; ?>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn btn-primary w-100 py-2 mb-3">
-                    <i class="bi bi-check-circle me-1"></i> Complete Registration
-                </button>
-
-                <div class="text-center small text-muted">
-                    Already have an account? <a href="<?= BASE_URL ?>auth/login.php" class="fw-semibold">Log In here</a>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>

@@ -3,8 +3,8 @@
 Update this file regularly as work happens.
 
 ## Current status
-- Phase: **Phase 7 Complete — Submission Ready** 🎉
-- Last file worked on: `INSTALL.md`, `md_files/features-checklist.md`
+- Phase: **Phase 7 Complete — Submission Ready (SaaS Redesign & Clean Branding)** 🎉
+- Last file worked on: `auth/login.php`, `auth/register.php`, `about.php`
 - Last updated: 2026-09-24
 
 ## Completed
@@ -13,9 +13,9 @@ Update this file regularly as work happens.
   - PDO connection configuration (`config/db.php`, `config/db.example.php`) and site constants (`config/constants.php`).
   - Procedural helper library (`includes/functions.php`) with CSRF protection, session flash messages, status badge helpers, and notification utilities.
   - Role-based route guard (`includes/auth-check.php`) enforcing real-time user status (active/pending/suspended) and row-level security.
-  - Custom design tokens & stylesheet (`assets/css/style.css`) matching `design.md` color scheme (#3D8B47, #2A6334, #E8935A, #FBF9F4, #2B2B28) and typography.
-  - Shared responsive header and footer (`includes/header.php`, `includes/footer.php`) with dynamic role-aware navigation.
-  - Customer & Farmer registration (`auth/register.php`), unified login (`auth/login.php`), admin login (`auth/admin-login.php`), logout (`auth/logout.php`), and tokenized password reset flow (`auth/forgot-password.php`, `auth/reset-password.php`).
+  - High-end SaaS design system & stylesheet (`assets/css/style.css`) with responsive split-screen auth layouts and earthy design tokens.
+  - Shared responsive header and footer (`includes/header.php`, `includes/footer.php`) with dynamic role-aware navigation and glassmorphism navbar.
+  - Customer & Farmer registration (`auth/register.php`), unified login (`auth/login.php`), admin login (`auth/admin-login.php`), logout (`auth/logout.php`), and tokenized password reset flow (`auth/forgot-password.php`, `auth/reset-password.php`) featuring 2-column SaaS split-screen layouts with brand showcases.
   - Landing page (`index.php`) and role dashboard skeletons.
 
 - **Phase 2: Farmer Module**

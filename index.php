@@ -47,7 +47,7 @@ require_once __DIR__ . '/includes/header.php';
             <div class="col-lg-6">
                 <div class="hero-eyebrow">
                     <i class="bi bi-patch-check-fill"></i>
-                    Aptech TechWiz 7 · Best Project
+                    100% Farm-Fresh Local Produce
                 </div>
                 <h1>
                     Farm-Fresh Produce,<br>

@@ -60,19 +60,22 @@ $page_title = 'Forgot Password';
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
-<div class="container py-5">
-    <div class="card auth-card">
+<div class="auth-container" style="max-width: 520px;">
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
         <div class="card-body p-4 p-md-5">
             <div class="text-center mb-4">
                 <div class="d-inline-flex p-3 rounded-circle bg-primary-subtle text-primary mb-2">
                     <i class="bi bi-key-fill fs-3"></i>
                 </div>
-                <h1 class="h3 brand-font">Reset Your Password</h1>
+                <h1 class="h3 fw-bold">Reset Your Password</h1>
                 <p class="text-muted small">Enter your registered email address and we'll send you a password reset link.</p>
             </div>
 
             <?php if (!empty($error)): ?>
-                <div class="alert alert-danger py-2 small mb-3"><?= e($error) ?></div>
+                <div class="alert alert-danger py-2 small mb-4 d-flex align-items-center gap-2">
+                    <i class="bi bi-exclamation-triangle-fill flex-shrink-0"></i>
+                    <div><?= e($error) ?></div>
+                </div>
             <?php endif; ?>
 
             <?php if ($success): ?>
@@ -82,9 +85,9 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
 
                 <?php if (!empty($demo_reset_link)): ?>
-                    <div class="p-3 bg-light rounded border mb-4">
-                        <div class="small fw-bold text-success mb-1"><i class="bi bi-info-circle me-1"></i> Local Demo Helper (Simulated Email Link):</div>
-                        <p class="small text-muted mb-2">Because this is running on local XAMPP without a configured mail server, you can access your reset link directly below:</p>
+                    <div class="p-3 bg-light rounded-3 border mb-4">
+                        <div class="small fw-bold text-success mb-1"><i class="bi bi-info-circle me-1"></i> Quick Reset Link:</div>
+                        <p class="small text-muted mb-2">You can access your reset link directly below to choose a new password:</p>
                         <a href="<?= e($demo_reset_link) ?>" class="btn btn-primary btn-sm w-100 text-truncate">
                             <i class="bi bi-arrow-right-circle me-1"></i> Open Password Reset Form
                         </a>
@@ -101,16 +104,19 @@ require_once __DIR__ . '/../includes/header.php';
                     <?= csrf_field() ?>
 
                     <div class="mb-4">
-                        <label class="form-label" for="email">Email Address</label>
-                        <input type="email" class="form-control" id="email" name="email" required placeholder="name@example.com" autofocus>
+                        <label class="form-label small fw-semibold" for="email">Registered Email Address</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted"><i class="bi bi-envelope"></i></span>
+                            <input type="email" class="form-control" id="email" name="email" required placeholder="name@example.com" autofocus>
+                        </div>
                     </div>
 
-                    <button type="submit" class="btn btn-primary w-100 py-2 mb-3">
-                        <i class="bi bi-send me-1"></i> Send Reset Link
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold mb-3">
+                        <i class="bi bi-send me-1"></i> Send Password Reset Link
                     </button>
 
                     <div class="text-center small text-muted">
-                        Remember your password? <a href="<?= BASE_URL ?>auth/login.php" class="fw-semibold">Log In</a>
+                        Remembered your password? <a href="<?= BASE_URL ?>auth/login.php" class="fw-bold text-primary">Back to Login</a>
                     </div>
                 </form>
             <?php endif; ?>
