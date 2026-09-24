@@ -28,10 +28,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $rating = 5;
     }
 
-    if (empty($comment)) {
+    if (empty($fid)) {
+        set_flash('danger', 'Please select a farmer stall to review.');
+    } elseif (empty($comment)) {
         set_flash('danger', 'Please write a review comment.');
     } else {
         try {
+            // Verify that the customer has actually completed an order with this farmer
+            $eligibility_chk = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE customer_id = :cid AND farmer_id = :fid AND status = 'completed'");
+            $eligibility_chk->execute([':cid' => $customer_id, ':fid' => $fid]);
+            $has_completed = (int)$eligibility_chk->fetchColumn();
+
+            if ($has_completed === 0) {
+                set_flash('warning', 'You can only leave reviews for farmer stalls where you have a completed order pickup.');
+                redirect(BASE_URL . 'customer/reviews.php');
+            }
+
             $stmt = $pdo->prepare("INSERT INTO reviews (customer_id, farmer_id, product_id, rating, comment, created_at) 
                                   VALUES (:cid, :fid, :pid, :rating, :comment, NOW())");
             $stmt->execute([
@@ -58,27 +70,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch prefilled target farmer or product if requested via URL
-if ($target_farmer_id > 0) {
-    try {
-        $f_stmt = $pdo->prepare("SELECT u.name, fp.stall_name FROM users u LEFT JOIN farmer_profiles fp ON u.user_id = fp.farmer_id WHERE u.user_id = :fid LIMIT 1");
-        $f_stmt->execute([':fid' => $target_farmer_id]);
-        $target_farmer = $f_stmt->fetch();
-    } catch (PDOException $e) {}
-}
-
-// Fetch list of farmers customer has completed orders with (for the review dropdown)
+// Fetch list of farmers customer has completed orders with (eligible for reviews)
 $eligible_farmers = [];
 try {
-    $ef_stmt = $pdo->prepare("SELECT DISTINCT u.user_id, u.name, fp.stall_name 
+    $ef_stmt = $pdo->prepare("SELECT u.user_id, u.name, fp.stall_name, COUNT(o.order_id) as completed_orders_count
                               FROM orders o 
                               JOIN users u ON o.farmer_id = u.user_id 
                               LEFT JOIN farmer_profiles fp ON u.user_id = fp.farmer_id 
-                              WHERE o.customer_id = :cid AND o.status = 'completed'");
+                              WHERE o.customer_id = :cid AND o.status = 'completed'
+                              GROUP BY u.user_id, u.name, fp.stall_name
+                              ORDER BY COALESCE(NULLIF(fp.stall_name, ''), u.name) ASC");
     $ef_stmt->execute([':cid' => $customer_id]);
     $eligible_farmers = $ef_stmt->fetchAll();
 } catch (PDOException $e) {
     error_log("Eligible farmers fetch error: " . $e->getMessage());
+}
+
+// Check if target farmer from URL is eligible
+$target_eligible = false;
+if ($target_farmer_id > 0) {
+    foreach ($eligible_farmers as $ef) {
+        if ((int)$ef['user_id'] === $target_farmer_id) {
+            $target_eligible = true;
+            break;
+        }
+    }
 }
 
 // Fetch customer's past submitted reviews
@@ -105,7 +121,7 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h1 class="h3 mb-1"><i class="bi bi-star-fill text-warning me-2"></i>My Reviews & Ratings</h1>
-            <p class="text-muted small mb-0">Share your feedback on farm produce freshness and stall service</p>
+            <p class="text-muted small mb-0">Share your verified feedback on farm produce freshness and stall service</p>
         </div>
         <div>
             <a href="<?= BASE_URL ?>customer/orders.php" class="btn btn-outline-secondary btn-sm">
@@ -117,56 +133,89 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="row g-4">
         <!-- Leave Review Form Column -->
         <div class="col-lg-5">
-            <div class="card shadow-sm border-0 sticky-top" style="top: 85px;">
-                <div class="card-header bg-white py-3">
-                    <h5 class="card-title mb-0 fs-6"><i class="bi bi-pencil-square text-primary me-2"></i>Write a Review</h5>
-                </div>
-                <div class="card-body p-4">
-                    <form action="<?= BASE_URL ?>customer/reviews.php" method="POST" novalidate>
-                        <?= csrf_field() ?>
-
-                        <!-- Farmer Stall Selection -->
+            <?php if (empty($eligible_farmers)): ?>
+                <!-- Notice when user has not completed any orders yet -->
+                <div class="card shadow-sm border-0 sticky-top" style="top: 85px;">
+                    <div class="card-body p-4 text-center">
                         <div class="mb-3">
-                            <label class="form-label small fw-semibold" for="farmer_id">Select Farmer Stall <span class="text-danger">*</span></label>
-                            <select class="form-select" id="farmer_id" name="farmer_id" required>
-                                <?php if (!empty($eligible_farmers)): ?>
+                            <div class="d-inline-flex align-items-center justify-content-center bg-warning bg-opacity-10 text-warning rounded-circle p-3">
+                                <i class="bi bi-patch-check-fill fs-2 text-warning"></i>
+                            </div>
+                        </div>
+                        <h5 class="fw-bold mb-2">Verified Reviews Only</h5>
+                        <p class="text-muted small mb-4">
+                            You can write a review once you have completed and picked up a pre-order from a local farmer stall. Please complete an order first to unlock ratings and reviews.
+                        </p>
+                        <div class="d-grid gap-2">
+                            <a href="<?= BASE_URL ?>customer/browse-products.php" class="btn btn-primary btn-sm py-2">
+                                <i class="bi bi-shop me-1"></i> Browse Fresh Produce
+                            </a>
+                            <a href="<?= BASE_URL ?>customer/orders.php" class="btn btn-outline-secondary btn-sm py-2">
+                                <i class="bi bi-receipt me-1"></i> View My Pre-Orders
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            <?php else: ?>
+                <!-- Write Review Form -->
+                <div class="card shadow-sm border-0 sticky-top" style="top: 85px;">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="card-title mb-0 fs-6"><i class="bi bi-pencil-square text-primary me-2"></i>Write a Verified Review</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <form action="<?= BASE_URL ?>customer/reviews.php" method="POST" novalidate>
+                            <?= csrf_field() ?>
+
+                            <!-- Farmer Stall Selection -->
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold" for="farmer_id">Select Farmer Stall <span class="text-danger">*</span></label>
+                                <select class="form-select" id="farmer_id" name="farmer_id" required>
+                                    <?php if (count($eligible_farmers) > 1): ?>
+                                        <option value="" <?= (!$target_eligible) ? 'selected' : '' ?> disabled>-- Choose a Farm Stall --</option>
+                                    <?php endif; ?>
                                     <?php foreach ($eligible_farmers as $ef): ?>
-                                        <option value="<?= $ef['user_id'] ?>" <?= $target_farmer_id === (int)$ef['user_id'] ? 'selected' : '' ?>>
-                                            <?= e($ef['stall_name'] ?: $ef['name']) ?>
+                                        <?php 
+                                            $isSelected = ($target_farmer_id === (int)$ef['user_id']) || (count($eligible_farmers) === 1);
+                                            $displayName = !empty($ef['stall_name']) ? $ef['stall_name'] : $ef['name'];
+                                            if (!empty($ef['stall_name']) && $ef['stall_name'] !== $ef['name']) {
+                                                $displayName .= ' (' . $ef['name'] . ')';
+                                            }
+                                        ?>
+                                        <option value="<?= (int)$ef['user_id'] ?>" <?= $isSelected ? 'selected' : '' ?>>
+                                            <?= e($displayName) ?>
                                         </option>
                                     <?php endforeach; ?>
-                                <?php else: ?>
-                                    <option value="<?= $target_farmer_id ?>" selected>
-                                        <?= e($target_farmer['stall_name'] ?? 'Sample Stall') ?>
-                                    </option>
-                                <?php endif; ?>
-                            </select>
-                        </div>
+                                </select>
+                                <div class="form-text small text-muted">
+                                    <i class="bi bi-info-circle me-1"></i>Only stalls where you have completed orders are listed.
+                                </div>
+                            </div>
 
-                        <!-- Rating Selector (1 to 5 Stars) -->
-                        <div class="mb-3">
-                            <label class="form-label small fw-semibold" for="rating">Rating <span class="text-danger">*</span></label>
-                            <select class="form-select" id="rating" name="rating">
-                                <option value="5">⭐⭐⭐⭐⭐ 5 - Outstanding Quality</option>
-                                <option value="4">⭐⭐⭐⭐ 4 - Very Fresh & Good</option>
-                                <option value="3">⭐⭐⭐ 3 - Average Quality</option>
-                                <option value="2">⭐⭐ 2 - Below Expectations</option>
-                                <option value="1">⭐ 1 - Poor Quality</option>
-                            </select>
-                        </div>
+                            <!-- Rating Selector (1 to 5 Stars) -->
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold" for="rating">Rating <span class="text-danger">*</span></label>
+                                <select class="form-select" id="rating" name="rating">
+                                    <option value="5">⭐⭐⭐⭐⭐ 5 - Outstanding Quality</option>
+                                    <option value="4">⭐⭐⭐⭐ 4 - Very Fresh & Good</option>
+                                    <option value="3">⭐⭐⭐ 3 - Average Quality</option>
+                                    <option value="2">⭐⭐ 2 - Below Expectations</option>
+                                    <option value="1">⭐ 1 - Poor Quality</option>
+                                </select>
+                            </div>
 
-                        <!-- Comment -->
-                        <div class="mb-4">
-                            <label class="form-label small fw-semibold" for="comment">Your Feedback & Experience <span class="text-danger">*</span></label>
-                            <textarea class="form-control" id="comment" name="comment" rows="4" placeholder="How was the freshness, taste, and stall pickup experience?" required></textarea>
-                        </div>
+                            <!-- Comment -->
+                            <div class="mb-4">
+                                <label class="form-label small fw-semibold" for="comment">Your Feedback & Experience <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="comment" name="comment" rows="4" placeholder="How was the freshness, taste, and stall pickup experience?" required></textarea>
+                            </div>
 
-                        <button type="submit" class="btn btn-primary w-100 py-2">
-                            <i class="bi bi-send me-1"></i> Submit Review
-                        </button>
-                    </form>
+                            <button type="submit" class="btn btn-primary w-100 py-2">
+                                <i class="bi bi-send me-1"></i> Submit Review
+                            </button>
+                        </form>
+                    </div>
                 </div>
-            </div>
+            <?php endif; ?>
         </div>
 
         <!-- Submitted Reviews Feed Column -->

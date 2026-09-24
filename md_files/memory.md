@@ -35,7 +35,7 @@ Update this file regularly as work happens.
   - Multi-Stall Pre-Order Checkout (`customer/checkout.php`): Grouped orders per stall with pickup date/time slot selection, race-condition transaction safety, and instant farmer in-app notifications.
   - Order Tracking & Reorder (`customer/orders.php`): SaaS-level metric cards, interactive pill filter toolbar (All, In Progress, Ready, Completed, Cancelled), instant search bar, detailed itemized drawer breakdown, and one-click basket reordering.
   - Saved Favorites (`customer/favorites.php`): Manage favorite farmer stalls and go-to produce items.
-  - Reviews & Star Ratings (`customer/reviews.php`): Rating submission (1-5 stars) and review feed displaying farmer stall replies.
+  - Reviews & Star Ratings (`customer/reviews.php`): Verified review system enforcing completed order pickup eligibility with helpful guidance card when no orders are completed, dropdown filtering of completed stalls, and review feed displaying farmer stall replies.
 
 - **Phase 4: Admin Module**
   - Platform Administrator Hub (`admin/dashboard.php`): Live system counts and rapid pending farmer review queue.

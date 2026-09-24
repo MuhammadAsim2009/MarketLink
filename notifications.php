@@ -238,8 +238,8 @@ require_once __DIR__ . '/includes/header.php';
                                                     <span class="badge bg-primary px-1 py-0" style="font-size: .65rem; border-radius: 4px;">NEW</span>
                                                 <?php endif; ?>
                                             </div>
-                                            <small class="text-muted" title="<?= format_datetime($n['created_at']) ?>">
-                                                <i class="bi bi-clock me-1" style="font-size: .75rem;"></i><?= notif_time_ago($n['created_at']) ?>
+                                            <small class="text-muted notif-timestamp" data-timestamp="<?= strtotime($n['created_at']) ?>" title="<?= format_datetime($n['created_at']) ?>">
+                                                <i class="bi bi-clock me-1" style="font-size: .75rem;"></i><span class="time-ago-val"><?= notif_time_ago($n['created_at']) ?></span>
                                             </small>
                                         </div>
 
@@ -356,5 +356,40 @@ require_once __DIR__ . '/includes/header.php';
         </div>
     </div>
 </div>
+
+<script>
+// Dynamic live relative timestamp ticker for notifications
+(function() {
+    function formatTimeAgo(timestampSec) {
+        const nowSec = Math.floor(Date.now() / 1000);
+        const diff = Math.max(0, nowSec - timestampSec);
+
+        if (diff < 60) return 'Just now';
+        if (diff < 3600) return Math.floor(diff / 60) + ' min ago';
+        if (diff < 86400) return Math.floor(diff / 3600) + ' hr ago';
+        if (diff < 172800) return 'Yesterday';
+        if (diff < 604800) return Math.floor(diff / 86400) + ' days ago';
+
+        const d = new Date(timestampSec * 1000);
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+    }
+
+    function updateAllTimestamps() {
+        document.querySelectorAll('.notif-timestamp').forEach(function(el) {
+            const ts = parseInt(el.getAttribute('data-timestamp'), 10);
+            if (!isNaN(ts)) {
+                const valEl = el.querySelector('.time-ago-val');
+                if (valEl) {
+                    valEl.textContent = formatTimeAgo(ts);
+                }
+            }
+        });
+    }
+
+    // Refresh timestamps live every 30 seconds
+    setInterval(updateAllTimestamps, 30000);
+})();
+</script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
