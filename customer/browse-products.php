@@ -190,7 +190,7 @@ require_once __DIR__ . '/../includes/header.php';
                             <div class="card product-card card-hover <?= $prod['is_sold_out'] ? 'opacity-75' : '' ?>">
                                 <div class="product-img-wrapper d-flex align-items-center justify-content-center bg-light text-muted">
                                     <?php if (!empty($prod['image_url'])): ?>
-                                        <img src="<?= BASE_URL . e($prod['image_url']) ?>" alt="<?= e($prod['name']) ?>" class="w-100 h-100 object-fit-cover" onerror="this.src='https://placehold.co/300x200?text=Produce'">
+                                        <img src="<?= e(get_image_url($prod['image_url'])) ?>" alt="<?= e($prod['name']) ?>" class="w-100 h-100 object-fit-cover" onerror="this.src='https://placehold.co/300x200?text=Produce'">
                                     <?php else: ?>
                                         <i class="bi bi-egg-fried fs-1 text-primary-subtle"></i>
                                     <?php endif; ?>

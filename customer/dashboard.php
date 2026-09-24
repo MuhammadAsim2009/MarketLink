@@ -313,7 +313,7 @@ require_once __DIR__ . '/../includes/header.php';
                                     <div class="d-flex align-items-center gap-2 min-w-0">
                                         <div class="rounded bg-white d-flex align-items-center justify-content-center border" style="width: 36px; height: 36px; flex-shrink: 0;">
                                             <?php if (!empty($fav['image_url'])): ?>
-                                                <img src="<?= BASE_URL . e($fav['image_url']) ?>" alt="<?= e($fav['name']) ?>" class="w-100 h-100 rounded object-fit-cover">
+                                                <img src="<?= e(get_image_url($fav['image_url'])) ?>" alt="<?= e($fav['name']) ?>" class="w-100 h-100 rounded object-fit-cover" onerror="this.src='https://placehold.co/100x100?text=Produce'">
                                             <?php else: ?>
                                                 <i class="bi bi-egg-fried text-primary" style="font-size: .8rem;"></i>
                                             <?php endif; ?>

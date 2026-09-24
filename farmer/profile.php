@@ -124,31 +124,31 @@ try {
     error_log("Fetch profile data error: " . $e->getMessage());
 }
 
-$page_title = 'Stall Profile & Schedule';
-require_once __DIR__ . '/../includes/header.php';
+$active_nav = 'profile';
+$page_title = 'Stall Profile & Schedule Settings';
+require_once __DIR__ . '/includes/header.php';
 ?>
 
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-1"><i class="bi bi-shop text-primary me-2"></i>Stall Profile & Schedule</h1>
-            <p class="text-muted small mb-0">Configure your farm branding, operating days, pickup timings, and map location</p>
-        </div>
-        <div>
-            <a href="<?= BASE_URL ?>farmer/dashboard.php" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-arrow-left me-1"></i> Dashboard
-            </a>
-        </div>
+<!-- Page Header -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h1 class="h3 mb-1 fw-bold">Stall Settings & Schedule</h1>
+        <p class="text-muted small mb-0">Configure your farm branding, operating days, pickup timings, and interactive map pin</p>
     </div>
+    <div class="d-flex gap-2">
+        <a href="<?= BASE_URL ?>customer/farmer-detail.php?farmer_id=<?= $farmer_id ?>" target="_blank" class="btn btn-outline-secondary btn-sm rounded-3">
+            <i class="bi bi-eye me-1"></i> Preview Public Stall
+        </a>
+    </div>
+</div>
 
-    <?php if (!empty($errors['general'])): ?>
-        <div class="alert alert-danger py-2 small mb-3"><?= e($errors['general']) ?></div>
-    <?php endif; ?>
+<?php if (!empty($errors['general'])): ?>
+    <div class="alert alert-danger py-2 small mb-3 border-0 shadow-xs"><?= e($errors['general']) ?></div>
+<?php endif; ?>
 
-    <form action="<?= BASE_URL ?>farmer/profile.php" method="POST" novalidate>
-        <?= csrf_field() ?>
-
-        <div class="row g-4">
+<form action="<?= BASE_URL ?>farmer/profile.php" method="POST" novalidate>
+    <?= csrf_field() ?>
+    <div class="row g-4">
             <!-- Left Column: Stall Details & Timings -->
             <div class="col-lg-6">
                 <!-- Branding & Contact Card -->
@@ -273,15 +273,14 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
                 </div>
 
-                <div class="card shadow-sm border-0 p-3 bg-light">
-                    <button type="submit" class="btn btn-primary btn-lg w-100 py-2">
+                <div class="card shadow-xs border-0 p-3 bg-white rounded-4">
+                    <button type="submit" class="btn btn-primary btn-lg w-100 py-2 rounded-3 shadow-xs">
                         <i class="bi bi-check2-circle me-1"></i> Save Stall Configuration
                     </button>
                 </div>
             </div>
         </div>
     </form>
-</div>
 
 <!-- Leaflet Map Initialization Script -->
 <script>
@@ -311,4 +310,4 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+<?php require_once __DIR__ . '/includes/footer.php'; ?>

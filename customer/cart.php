@@ -229,7 +229,7 @@ require_once __DIR__ . '/../includes/header.php';
                                                 <div class="d-flex align-items-center gap-2">
                                                     <div class="rounded bg-light d-flex align-items-center justify-content-center border" style="width: 44px; height: 44px; flex-shrink: 0;">
                                                         <?php if (!empty($p['image_url'])): ?>
-                                                             <img src="<?= BASE_URL . e($p['image_url']) ?>" alt="<?= e($p['name']) ?>" class="w-100 h-100 rounded object-fit-cover" onerror="this.src='https://placehold.co/100x100?text=Produce'">
+                                                             <img src="<?= e(get_image_url($p['image_url'])) ?>" alt="<?= e($p['name']) ?>" class="w-100 h-100 rounded object-fit-cover" onerror="this.src='https://placehold.co/100x100?text=Produce'">
                                                         <?php else: ?>
                                                             <i class="bi bi-egg-fried fs-5 text-primary"></i>
                                                         <?php endif; ?>

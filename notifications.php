@@ -147,11 +147,21 @@ $filtered_notifications = array_filter($all_notifications, function($n) use ($fi
     return true;
 });
 
+$is_farmer = ($current_role === ROLE_FARMER);
 $page_title = 'Notifications Center';
-require_once __DIR__ . '/includes/header.php';
+$active_nav = 'notifications';
+
+if ($is_farmer) {
+    require_once __DIR__ . '/farmer/includes/header.php';
+} else {
+    require_once __DIR__ . '/includes/header.php';
+}
 ?>
 
+<?php if (!$is_farmer): ?>
 <div class="container py-4">
+<?php endif; ?>
+
     <!-- Breadcrumb & Top Bar -->
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 pb-2 border-bottom">
         <div>
@@ -164,7 +174,7 @@ require_once __DIR__ . '/includes/header.php';
                 <?php endif; ?>
             </div>
             <h1 class="h3 fw-bold mb-1">Notifications Center</h1>
-            <p class="text-muted small mb-0">Real-time status updates on your pre-orders, market schedules, and announcements</p>
+            <p class="text-muted small mb-0">Real-time status updates on your <?= $is_farmer ? 'pre-orders, harvest inventory, customer reviews, and market bulletins' : 'pre-orders, market schedules, and announcements' ?></p>
         </div>
 
         <!-- Global Action Controls -->
@@ -336,26 +346,43 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
             </div>
 
-            <!-- Helpful Navigation Card -->
+            <!-- Quick Action Shortcuts Card -->
             <div class="card border shadow-xs">
                 <div class="card-header bg-white py-3">
-                    <h6 class="card-title mb-0 fw-bold fs-6"><i class="bi bi-lightning-charge text-accent me-2"></i>Quick Actions</h6>
+                    <h6 class="card-title mb-0 fw-bold fs-6"><i class="bi bi-lightning-charge text-accent me-2"></i><?= $is_farmer ? 'Producer Shortcuts' : 'Quick Actions' ?></h6>
                 </div>
                 <div class="card-body p-3 d-flex flex-column gap-2">
-                    <a href="<?= BASE_URL ?>customer/orders.php" class="btn btn-outline-primary btn-sm text-start justify-content-start">
-                        <i class="bi bi-bag-check me-2"></i> Track Active Orders
-                    </a>
-                    <a href="<?= BASE_URL ?>customer/browse-markets.php" class="btn btn-outline-primary btn-sm text-start justify-content-start">
-                        <i class="bi bi-geo-alt me-2"></i> Explore Weekend Markets
-                    </a>
-                    <a href="<?= BASE_URL ?>customer/favorites.php" class="btn btn-outline-primary btn-sm text-start justify-content-start">
-                        <i class="bi bi-heart me-2"></i> Saved Stalls & Harvest
-                    </a>
+                    <?php if ($is_farmer): ?>
+                        <a href="<?= BASE_URL ?>farmer/orders.php" class="btn btn-outline-primary btn-sm text-start justify-content-start">
+                            <i class="bi bi-receipt me-2"></i> Pre-Orders Queue
+                        </a>
+                        <a href="<?= BASE_URL ?>farmer/products.php" class="btn btn-outline-primary btn-sm text-start justify-content-start">
+                            <i class="bi bi-box-seam me-2"></i> Harvest Catalog
+                        </a>
+                        <a href="<?= BASE_URL ?>farmer/reviews.php" class="btn btn-outline-primary btn-sm text-start justify-content-start">
+                            <i class="bi bi-star me-2"></i> Customer Reviews
+                        </a>
+                        <a href="<?= BASE_URL ?>farmer/profile.php" class="btn btn-outline-primary btn-sm text-start justify-content-start">
+                            <i class="bi bi-shop me-2"></i> Stall Settings
+                        </a>
+                    <?php else: ?>
+                        <a href="<?= BASE_URL ?>customer/orders.php" class="btn btn-outline-primary btn-sm text-start justify-content-start">
+                            <i class="bi bi-bag-check me-2"></i> Track Active Orders
+                        </a>
+                        <a href="<?= BASE_URL ?>customer/browse-markets.php" class="btn btn-outline-primary btn-sm text-start justify-content-start">
+                            <i class="bi bi-geo-alt me-2"></i> Explore Weekend Markets
+                        </a>
+                        <a href="<?= BASE_URL ?>customer/favorites.php" class="btn btn-outline-primary btn-sm text-start justify-content-start">
+                            <i class="bi bi-heart me-2"></i> Saved Stalls & Harvest
+                        </a>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
     </div>
+<?php if (!$is_farmer): ?>
 </div>
+<?php endif; ?>
 
 <script>
 // Dynamic live relative timestamp ticker for notifications
@@ -392,4 +419,10 @@ require_once __DIR__ . '/includes/header.php';
 })();
 </script>
 
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+<?php 
+if ($is_farmer) {
+    require_once __DIR__ . '/farmer/includes/footer.php';
+} else {
+    require_once __DIR__ . '/includes/footer.php';
+}
+?>

@@ -168,7 +168,7 @@ require_once __DIR__ . '/../includes/header.php';
                         <div class="card product-card card-hover shadow-sm border-0">
                             <div class="product-img-wrapper d-flex align-items-center justify-content-center bg-light">
                                 <?php if (!empty($p['image_url'])): ?>
-                                    <img src="<?= BASE_URL . e($p['image_url']) ?>" alt="<?= e($p['name']) ?>" class="w-100 h-100 object-fit-cover" onerror="this.src='https://placehold.co/300x200?text=Produce'">
+                                    <img src="<?= e(get_image_url($p['image_url'])) ?>" alt="<?= e($p['name']) ?>" class="w-100 h-100 object-fit-cover" onerror="this.src='https://placehold.co/300x200?text=Produce'">
                                 <?php else: ?>
                                     <i class="bi bi-egg-fried fs-1 text-primary-subtle"></i>
                                 <?php endif; ?>

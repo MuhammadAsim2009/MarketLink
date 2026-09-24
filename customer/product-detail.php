@@ -83,7 +83,7 @@ require_once __DIR__ . '/../includes/header.php';
             <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
                 <div class="d-flex align-items-center justify-content-center bg-light" style="height: 380px;">
                     <?php if (!empty($product['image_url'])): ?>
-                        <img src="<?= BASE_URL . e($product['image_url']) ?>" alt="<?= e($product['name']) ?>" class="w-100 h-100 object-fit-cover" onerror="this.src='https://placehold.co/600x400?text=Produce'">
+                        <img src="<?= e(get_image_url($product['image_url'])) ?>" alt="<?= e($product['name']) ?>" class="w-100 h-100 object-fit-cover" onerror="this.src='https://placehold.co/600x400?text=Produce'">
                     <?php else: ?>
                         <i class="bi bi-egg-fried fs-1 text-primary" style="font-size: 5rem !important;"></i>
                     <?php endif; ?>

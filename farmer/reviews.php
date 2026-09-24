@@ -63,117 +63,174 @@ try {
                           ORDER BY r.created_at DESC");
     $stmt->execute([':fid' => $farmer_id, ':fid2' => $farmer_id]);
     $reviews = $stmt->fetchAll();
-
-    $total_reviews = count($reviews);
-    if ($total_reviews > 0) {
-        $sum = array_sum(array_column($reviews, 'rating'));
-        $avg_rating = round($sum / $total_reviews, 1);
-    }
 } catch (PDOException $e) {
     error_log("Fetch reviews error: " . $e->getMessage());
 }
 
-$page_title = 'Customer Reviews';
-require_once __DIR__ . '/../includes/header.php';
+// Star breakdown computation
+$star_counts = [5 => 0, 4 => 0, 3 => 0, 2 => 0, 1 => 0];
+$total_reviews = count($reviews);
+if ($total_reviews > 0) {
+    $sum = 0;
+    foreach ($reviews as $r) {
+        $sum += (int)$r['rating'];
+        $star_counts[(int)$r['rating']] = ($star_counts[(int)$r['rating']] ?? 0) + 1;
+    }
+    $avg_rating = round($sum / $total_reviews, 1);
+}
+
+$active_nav = 'reviews';
+$page_title = 'Customer Reviews & Ratings';
+require_once __DIR__ . '/includes/header.php';
 ?>
 
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-1"><i class="bi bi-star-fill text-warning me-2"></i>Customer Reviews & Ratings</h1>
-            <p class="text-muted small mb-0">Read feedback from market shoppers and reply to customer reviews</p>
-        </div>
-        <div>
-            <a href="<?= BASE_URL ?>farmer/dashboard.php" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-arrow-left me-1"></i> Dashboard
-            </a>
-        </div>
+<!-- Page Header -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h1 class="h3 mb-1 fw-bold">Customer Reviews & Ratings</h1>
+        <p class="text-muted small mb-0">Monitor farm produce feedback, view verified customer ratings, and reply to stall reviews</p>
     </div>
+    <div>
+        <a href="<?= BASE_URL ?>customer/farmer-detail.php?farmer_id=<?= $farmer_id ?>" target="_blank" class="btn btn-outline-secondary btn-sm rounded-3">
+            <i class="bi bi-eye me-1"></i> Public Stall Reviews
+        </a>
+    </div>
+</div>
 
-    <!-- Rating Summary Box -->
-    <div class="card shadow-sm border-0 mb-4 bg-white">
-        <div class="card-body p-4">
-            <div class="row align-items-center g-3">
-                <div class="col-md-3 text-center border-end">
-                    <div class="display-5 fw-bold text-primary"><?= $avg_rating > 0 ? $avg_rating : '—' ?></div>
-                    <div class="text-warning mb-1">
-                        <?php for ($i = 1; $i <= 5; $i++): ?>
-                            <i class="bi <?= $i <= round($avg_rating) ? 'bi-star-fill' : 'bi-star' ?>"></i>
-                        <?php endfor; ?>
-                    </div>
-                    <div class="small text-muted"><?= $total_reviews ?> total review(s)</div>
+<!-- SaaS Reputation & Star Distribution Card -->
+<div class="card shadow-xs border-0 rounded-4 mb-4 bg-white overflow-hidden">
+    <div class="card-body p-4">
+        <div class="row align-items-center g-4">
+            <!-- Overall Score Column -->
+            <div class="col-lg-3 text-center border-end">
+                <div class="display-4 fw-bold text-dark mb-1"><?= $avg_rating > 0 ? $avg_rating : '—' ?></div>
+                <div class="text-warning mb-2 fs-5">
+                    <?php for ($i = 1; $i <= 5; $i++): ?>
+                        <i class="bi <?= $i <= round($avg_rating) ? 'bi-star-fill' : 'bi-star' ?>"></i>
+                    <?php endfor; ?>
                 </div>
-                <div class="col-md-9">
-                    <h6 class="fw-bold mb-1">Building Trust With Local Shoppers</h6>
-                    <p class="small text-muted mb-0">
-                        Customers who pre-order your harvest can leave a rating and review once their order is completed. Replying to feedback demonstrates good customer care and attracts repeat weekend buyers.
-                    </p>
+                <div class="small fw-semibold text-muted">
+                    Based on <?= $total_reviews ?> <?= $total_reviews === 1 ? 'verified review' : 'verified reviews' ?>
+                </div>
+            </div>
+
+            <!-- Star Distribution Bars -->
+            <div class="col-lg-5 border-end">
+                <div class="d-flex flex-column gap-2">
+                    <?php for ($s = 5; $s >= 1; $s--): 
+                        $pct = $total_reviews > 0 ? round(($star_counts[$s] / $total_reviews) * 100) : 0;
+                    ?>
+                        <div class="d-flex align-items-center gap-2 small">
+                            <span class="text-muted" style="width: 35px;"><?= $s ?> <i class="bi bi-star-fill text-warning" style="font-size: 0.75rem;"></i></span>
+                            <div class="progress flex-grow-1" style="height: 6px;">
+                                <div class="progress-bar bg-warning" role="progressbar" style="width: <?= $pct ?>%;" aria-valuenow="<?= $pct ?>" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                            <span class="text-muted text-end" style="width: 30px; font-size: 0.75rem;"><?= $star_counts[$s] ?></span>
+                        </div>
+                    <?php endfor; ?>
+                </div>
+            </div>
+
+            <!-- Trust Banner -->
+            <div class="col-lg-4">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="d-inline-flex p-3 bg-success-subtle text-success rounded-circle flex-shrink-0">
+                        <i class="bi bi-shield-check fs-4"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1">Building Producer Trust</h6>
+                        <p class="small text-muted mb-0" style="line-height: 1.45;">
+                            Only customers who complete a pre-order pickup can leave reviews. Replying to reviews demonstrates authentic care and increases weekend pre-orders.
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Reviews List -->
-    <div class="card shadow-sm border-0">
-        <div class="card-header bg-white py-3">
-            <h5 class="card-title mb-0 fs-6">All Reviews (<?= $total_reviews ?>)</h5>
-        </div>
-        <div class="card-body p-0">
-            <?php if (!empty($reviews)): ?>
-                <div class="list-group list-group-flush">
-                    <?php foreach ($reviews as $rev): ?>
-                        <div class="list-group-item p-4">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
+<!-- Reviews Feed Card -->
+<div class="card shadow-xs border-0 rounded-4 overflow-hidden">
+    <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom">
+        <h5 class="card-title mb-0 fs-6 fw-bold">Customer Feedback Feed (<?= $total_reviews ?>)</h5>
+    </div>
+    <div class="card-body p-0">
+        <?php if (!empty($reviews)): ?>
+            <div class="list-group list-group-flush">
+                <?php foreach ($reviews as $rev): 
+                    $c_initial = strtoupper(mb_substr($rev['customer_name'], 0, 1));
+                ?>
+                    <div class="list-group-item p-4">
+                        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="user-avatar" style="width: 40px; height: 40px; font-size: 0.95rem;">
+                                    <?= e($c_initial) ?>
+                                </div>
                                 <div>
-                                    <div class="fw-bold"><?= e($rev['customer_name']) ?></div>
-                                    <div class="text-warning small mb-1">
+                                    <div class="fw-bold text-dark d-flex align-items-center gap-2">
+                                        <?= e($rev['customer_name']) ?>
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill" style="font-size: 0.65rem;">
+                                            <i class="bi bi-patch-check-fill me-1"></i> Verified Pickup
+                                        </span>
+                                    </div>
+                                    <div class="text-warning small mb-0">
                                         <?php for ($i = 1; $i <= 5; $i++): ?>
                                             <i class="bi <?= $i <= $rev['rating'] ? 'bi-star-fill' : 'bi-star' ?>"></i>
                                         <?php endfor; ?>
-                                        <span class="text-muted ms-2"><?= format_date($rev['created_at']) ?></span>
+                                        <span class="text-muted ms-2" style="font-size: 0.75rem;"><?= format_date($rev['created_at']) ?></span>
                                     </div>
-                                    <?php if (!empty($rev['product_name'])): ?>
-                                        <span class="badge bg-light text-dark border small mb-2"><i class="bi bi-tag me-1"></i> Product: <?= e($rev['product_name']) ?></span>
-                                    <?php endif; ?>
                                 </div>
                             </div>
+                            <?php if (!empty($rev['product_name'])): ?>
+                                <span class="badge bg-light text-secondary border px-2 py-1" style="font-size: 0.75rem;">
+                                    <i class="bi bi-tag me-1"></i> <?= e($rev['product_name']) ?>
+                                </span>
+                            <?php endif; ?>
+                        </div>
 
-                            <p class="mb-3 text-secondary"><?= nl2br(e($rev['comment'])) ?></p>
+                        <p class="mb-3 text-secondary ps-sm-5 ms-sm-2" style="line-height: 1.5;"><?= nl2br(e($rev['comment'])) ?></p>
 
-                            <!-- Farmer Response Box -->
+                        <!-- Farmer Response Box -->
+                        <div class="ps-sm-5 ms-sm-2">
                             <?php if (!empty($rev['farmer_response'])): ?>
-                                <div class="p-3 rounded bg-light border-start border-success border-3 mb-2 small">
-                                    <div class="fw-bold text-success mb-1"><i class="bi bi-reply-fill me-1"></i> Your Stall Response:</div>
+                                <div class="p-3 rounded-3 bg-light border-start border-success border-4 mb-2 small">
+                                    <div class="fw-bold text-success mb-1 d-flex align-items-center gap-1">
+                                        <i class="bi bi-reply-fill"></i> Your Public Response:
+                                    </div>
                                     <p class="mb-0 text-dark"><?= nl2br(e($rev['farmer_response'])) ?></p>
                                 </div>
                             <?php else: ?>
-                                <button class="btn btn-outline-primary btn-sm py-1 px-3" type="button" data-bs-toggle="collapse" data-bs-target="#replyForm_<?= $rev['review_id'] ?>" aria-expanded="false">
-                                    <i class="bi bi-reply me-1"></i> Write a Reply
+                                <button class="btn btn-outline-primary btn-sm py-1 px-3 rounded-pill" type="button" data-bs-toggle="collapse" data-bs-target="#replyForm_<?= $rev['review_id'] ?>" aria-expanded="false">
+                                    <i class="bi bi-reply me-1"></i> Reply to Customer
                                 </button>
                                 <div class="collapse mt-3" id="replyForm_<?= $rev['review_id'] ?>">
-                                    <form method="POST" action="<?= BASE_URL ?>farmer/reviews.php" class="p-3 bg-light rounded border">
+                                    <form method="POST" action="<?= BASE_URL ?>farmer/reviews.php" class="p-3 bg-light rounded-3 border">
                                         <?= csrf_field() ?>
                                         <input type="hidden" name="review_id" value="<?= $rev['review_id'] ?>">
                                         <div class="mb-2">
-                                            <label class="form-label small fw-semibold" for="resp_<?= $rev['review_id'] ?>">Reply as Stall Owner:</label>
-                                            <textarea class="form-control form-control-sm" id="resp_<?= $rev['review_id'] ?>" name="farmer_response" rows="2" placeholder="Thank the customer for their review..." required></textarea>
+                                            <label class="form-label small fw-semibold" for="resp_<?= $rev['review_id'] ?>">Public Stall Response:</label>
+                                            <textarea class="form-control form-control-sm" id="resp_<?= $rev['review_id'] ?>" name="farmer_response" rows="2" placeholder="Thank the customer for their review and support..." required></textarea>
                                         </div>
-                                        <button type="submit" class="btn btn-primary btn-sm">Post Reply</button>
+                                        <button type="submit" class="btn btn-primary btn-sm rounded-3">
+                                            <i class="bi bi-send me-1"></i> Post Public Reply
+                                        </button>
                                     </form>
                                 </div>
                             <?php endif; ?>
                         </div>
-                    <?php endforeach; ?>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php else: ?>
+            <div class="text-center py-5 text-muted">
+                <div class="d-inline-flex p-3 bg-light rounded-circle mb-3">
+                    <i class="bi bi-chat-square-heart fs-2 text-muted"></i>
                 </div>
-            <?php else: ?>
-                <div class="text-center py-5 text-muted">
-                    <i class="bi bi-chat-square-heart fs-1 text-secondary-subtle d-block mb-2"></i>
-                    <h6>No reviews received yet</h6>
-                    <p class="small text-muted mb-0">Once customers pick up their orders and leave feedback, reviews will appear here.</p>
-                </div>
-            <?php endif; ?>
-        </div>
+                <h6 class="fw-bold mb-1">No reviews received yet</h6>
+                <p class="small text-muted mb-0">Once customers pick up their orders and leave feedback, reviews will appear here.</p>
+            </div>
+        <?php endif; ?>
     </div>
 </div>
 
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+<?php require_once __DIR__ . '/includes/footer.php'; ?>

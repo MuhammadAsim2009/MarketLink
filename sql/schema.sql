@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS `products` (
     `price` DECIMAL(10, 2) NOT NULL,
     `unit` VARCHAR(20) NOT NULL DEFAULT 'kg',
     `quantity_available` INT NOT NULL DEFAULT 0,
-    `image_url` VARCHAR(255) DEFAULT NULL,
+    `image_url` TEXT DEFAULT NULL,
     `is_sold_out` TINYINT(1) NOT NULL DEFAULT 0,
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT `fk_products_farmer` FOREIGN KEY (`farmer_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,

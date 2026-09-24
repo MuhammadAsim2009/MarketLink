@@ -216,8 +216,8 @@ require_once __DIR__ . '/includes/header.php';
                     <div class="col-lg-3 col-md-6">
                         <div class="product-card">
                             <div class="product-img-wrapper">
-                                <?php if (!empty($prod['image_url']) && file_exists(__DIR__ . '/' . $prod['image_url'])): ?>
-                                    <img src="<?= BASE_URL . e($prod['image_url']) ?>" alt="<?= e($prod['name']) ?>">
+                                <?php if (!empty($prod['image_url'])): ?>
+                                    <img src="<?= e(get_image_url($prod['image_url'])) ?>" alt="<?= e($prod['name']) ?>" onerror="this.onerror=null;this.src='https://placehold.co/400x300?text=Produce';">
                                 <?php else: ?>
                                     <i class="bi bi-egg-fried product-img-placeholder"></i>
                                 <?php endif; ?>

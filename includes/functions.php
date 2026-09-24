@@ -225,3 +225,20 @@ function get_unread_notifications_count($pdo, $user_id) {
         return 0;
     }
 }
+
+/**
+ * Format product/stall image URL (handles external web URLs, data URIs, and local relative paths)
+ */
+function get_image_url($url, $fallback = 'https://placehold.co/400x300?text=Produce') {
+    if (empty($url)) {
+        return $fallback;
+    }
+    // Check if it's already an external HTTP/HTTPS URL, protocol-relative URL, or data URI
+    if (preg_match('#^(https?://|//|data:image/)#i', $url)) {
+        return $url;
+    }
+    // Relative local path - trim leading slash to avoid duplicate slashes
+    $clean_url = ltrim($url, '/\\');
+    return BASE_URL . $clean_url;
+}
+

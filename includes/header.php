@@ -117,7 +117,7 @@ if (is_logged_in() && isset($pdo)) {
                     </a>
                 <?php elseif ($current_role === ROLE_FARMER): ?>
                     <a href="<?= BASE_URL ?>farmer/dashboard.php" class="btn btn-outline-primary btn-sm hide-mobile">
-                        <i class="bi bi-shop"></i> Hub
+                        <i class="bi bi-speedometer2"></i> Dashboard
                     </a>
                 <?php elseif ($current_role === ROLE_CUSTOMER): ?>
                     <a href="<?= BASE_URL ?>customer/dashboard.php" class="btn btn-outline-primary btn-sm hide-mobile">

@@ -135,59 +135,73 @@ try {
     error_log("Fetch farmer orders list error: " . $e->getMessage());
 }
 
-$page_title = 'Manage Pre-Orders';
-require_once __DIR__ . '/../includes/header.php';
+// Fetch count of orders by status for filter pill badges
+$counts = [
+    'all' => 0,
+    'placed' => 0,
+    'accepted' => 0,
+    'ready' => 0,
+    'completed' => 0,
+    'declined' => 0
+];
+try {
+    $c_stmt = $pdo->prepare("SELECT status, COUNT(*) as cnt FROM orders WHERE farmer_id = :fid GROUP BY status");
+    $c_stmt->execute([':fid' => $farmer_id]);
+    $rows = $c_stmt->fetchAll();
+    foreach ($rows as $r) {
+        $st = $r['status'];
+        $cnt = (int)$r['cnt'];
+        $counts['all'] += $cnt;
+        if (isset($counts[$st])) {
+            $counts[$st] = $cnt;
+        }
+    }
+} catch (PDOException $e) {}
+
+$active_nav = 'orders';
+$page_title = 'Pre-Orders & Pickup Queue';
+require_once __DIR__ . '/includes/header.php';
 ?>
 
-<div class="container py-4">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-        <div>
-            <h1 class="h3 mb-1"><i class="bi bi-receipt text-primary me-2"></i>Incoming Pre-Orders</h1>
-            <p class="text-muted small mb-0">Accept incoming customer reservations, prepare packs, and manage stall pickups</p>
-        </div>
-        <div>
-            <a href="<?= BASE_URL ?>farmer/dashboard.php" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-arrow-left me-1"></i> Dashboard
-            </a>
-        </div>
+<!-- Page Header -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h1 class="h3 mb-1 fw-bold">Pre-Orders Queue</h1>
+        <p class="text-muted small mb-0">Accept incoming reservations, prepare farm packs, and record completed stall pickups</p>
     </div>
+    <div>
+        <a href="<?= BASE_URL ?>farmer/dashboard.php" class="btn btn-outline-secondary btn-sm rounded-3">
+            <i class="bi bi-speedometer2 me-1"></i> Dashboard Hub
+        </a>
+    </div>
+</div>
 
-    <!-- Status Tabs -->
-    <ul class="nav nav-pills mb-4 bg-white p-2 rounded shadow-sm border">
-        <li class="nav-item">
-            <a class="nav-link py-1 px-3 <?= $status_filter === 'all' ? 'active' : '' ?>" href="<?= BASE_URL ?>farmer/orders.php?status=all">
-                All Orders
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link py-1 px-3 <?= $status_filter === 'placed' ? 'active' : '' ?>" href="<?= BASE_URL ?>farmer/orders.php?status=placed">
-                <i class="bi bi-bell-fill text-warning me-1"></i> Needs Action (Placed)
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link py-1 px-3 <?= $status_filter === 'accepted' ? 'active' : '' ?>" href="<?= BASE_URL ?>farmer/orders.php?status=accepted">
-                Accepted / Preparing
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link py-1 px-3 <?= $status_filter === 'ready' ? 'active' : '' ?>" href="<?= BASE_URL ?>farmer/orders.php?status=ready">
-                Ready for Pickup
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link py-1 px-3 <?= $status_filter === 'completed' ? 'active' : '' ?>" href="<?= BASE_URL ?>farmer/orders.php?status=completed">
-                Completed
-            </a>
-        </li>
-    </ul>
+<!-- SaaS Interactive Filter Pills -->
+<div class="d-flex flex-wrap gap-2 mb-4 p-2 bg-white rounded-4 border shadow-xs">
+    <a class="btn btn-sm rounded-pill px-3 <?= $status_filter === 'all' ? 'btn-primary' : 'btn-ghost text-secondary' ?>" href="<?= BASE_URL ?>farmer/orders.php?status=all">
+        All Orders <span class="badge <?= $status_filter === 'all' ? 'bg-white text-primary' : 'bg-light text-secondary border' ?> ms-1"><?= $counts['all'] ?></span>
+    </a>
+    <a class="btn btn-sm rounded-pill px-3 <?= $status_filter === 'placed' ? 'btn-primary' : 'btn-ghost text-secondary' ?>" href="<?= BASE_URL ?>farmer/orders.php?status=placed">
+        <i class="bi bi-bell-fill text-warning me-1"></i> Placed <span class="badge <?= $status_filter === 'placed' ? 'bg-white text-primary' : ($counts['placed'] > 0 ? 'bg-danger text-white' : 'bg-light text-secondary border') ?> ms-1"><?= $counts['placed'] ?></span>
+    </a>
+    <a class="btn btn-sm rounded-pill px-3 <?= $status_filter === 'accepted' ? 'btn-primary' : 'btn-ghost text-secondary' ?>" href="<?= BASE_URL ?>farmer/orders.php?status=accepted">
+        Accepted <span class="badge <?= $status_filter === 'accepted' ? 'bg-white text-primary' : 'bg-light text-secondary border' ?> ms-1"><?= $counts['accepted'] ?></span>
+    </a>
+    <a class="btn btn-sm rounded-pill px-3 <?= $status_filter === 'ready' ? 'btn-primary' : 'btn-ghost text-secondary' ?>" href="<?= BASE_URL ?>farmer/orders.php?status=ready">
+        Ready for Pickup <span class="badge <?= $status_filter === 'ready' ? 'bg-white text-primary' : 'bg-light text-secondary border' ?> ms-1"><?= $counts['ready'] ?></span>
+    </a>
+    <a class="btn btn-sm rounded-pill px-3 <?= $status_filter === 'completed' ? 'btn-primary' : 'btn-ghost text-secondary' ?>" href="<?= BASE_URL ?>farmer/orders.php?status=completed">
+        Completed <span class="badge <?= $status_filter === 'completed' ? 'bg-white text-primary' : 'bg-light text-secondary border' ?> ms-1"><?= $counts['completed'] ?></span>
+    </a>
+</div>
 
-    <div class="row g-4">
-        <!-- Orders List Column -->
-        <div class="<?= $selected_order ? 'col-lg-7' : 'col-12' ?>">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0 fs-6">Orders List (<?= count($orders_list) ?>)</h5>
-                </div>
+<div class="row g-4">
+    <!-- Orders List Column -->
+    <div class="<?= $selected_order ? 'col-lg-7' : 'col-12' ?>">
+        <div class="card shadow-xs border-0 rounded-4 overflow-hidden">
+            <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom">
+                <h5 class="card-title mb-0 fs-6 fw-bold">Orders List (<?= count($orders_list) ?>)</h5>
+            </div>
                 <div class="card-body p-0">
                     <?php if (!empty($orders_list)): ?>
                         <div class="table-responsive">
@@ -268,9 +282,18 @@ require_once __DIR__ . '/../includes/header.php';
                         <ul class="list-group list-group-flush mb-3 border rounded">
                             <?php foreach ($selected_order_items as $item): ?>
                                 <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-3 small">
-                                    <div>
-                                        <span class="fw-bold"><?= e($item['product_name']) ?></span>
-                                        <span class="text-muted ms-1">&times; <?= $item['quantity'] ?> <?= e($item['unit']) ?></span>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="rounded bg-light d-flex align-items-center justify-content-center border" style="width: 32px; height: 32px; flex-shrink: 0; overflow: hidden;">
+                                            <?php if (!empty($item['image_url'])): ?>
+                                                <img src="<?= e(get_image_url($item['image_url'])) ?>" alt="<?= e($item['product_name']) ?>" class="w-100 h-100 rounded object-fit-cover" onerror="this.src='https://placehold.co/100x100?text=Produce'">
+                                            <?php else: ?>
+                                                <i class="bi bi-egg-fried text-primary" style="font-size: .8rem;"></i>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div>
+                                            <span class="fw-bold"><?= e($item['product_name']) ?></span>
+                                            <span class="text-muted ms-1">&times; <?= $item['quantity'] ?> <?= e($item['unit']) ?></span>
+                                        </div>
                                     </div>
                                     <span class="fw-semibold"><?= format_currency($item['price_at_order'] * $item['quantity']) ?></span>
                                 </li>
@@ -339,4 +362,4 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+<?php require_once __DIR__ . '/includes/footer.php'; ?>

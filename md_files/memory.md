@@ -19,11 +19,13 @@ Update this file regularly as work happens.
   - Customer & Farmer registration (`auth/register.php`), unified login (`auth/login.php`), admin login (`auth/admin-login.php`), logout (`auth/logout.php`), and tokenized password reset flow (`auth/forgot-password.php`, `auth/reset-password.php`) featuring 2-column SaaS split-screen layouts with brand showcases and interactive show/hide password toggle buttons on all password fields.
   - Landing page (`index.php`) and role dashboard skeletons.
 
-- **Phase 2: Farmer Module**
-  - Product CRUD Management (`farmer/products.php`): Full add, edit, delete with stock validation, category filtering, search, image upload/URL, one-click sold out toggling, and weekend bulk restock tool.
-  - Pre-Order Workflow (`farmer/orders.php`): Incoming order queue, status transitions (`placed` -> `accepted` / `declined` -> `ready` -> `completed`), automatic stock restoration upon decline, and instant customer in-app notifications.
-  - Stall Profile & Location Pin (`farmer/profile.php`): Stall branding, contact details, operating days, pickup windows (start, end, cutoff hours), interactive Leaflet + OpenStreetMap pin picker, and market association checkboxes.
-  - Review Management (`farmer/reviews.php`): Average stall ratings, review feed, and public farmer reply workflow with customer notification triggers.
+- **Phase 2: Farmer Module (SaaS Portal Redesign)**
+  - Dedicated Farmer Portal Architecture (`farmer/includes/header.php`, `farmer/includes/footer.php`): Full-featured responsive sidebar navigation, top app bar with breadcrumb context, real-time counter badges (pending pre-orders, active inventory, unread notifications), mobile drawer toggler, and public stall quick preview.
+  - Farmer Hub Dashboard (`farmer/dashboard.php`): Modern SaaS 4-card metric grid (Harvest Catalog, Pending Action Pre-Orders with pulse badges, PKR Completed Revenue, Average Stall Rating), recent pre-orders queue, and quick operations toolbar.
+  - Product CRUD Management (`farmer/products.php`): Inventory table with live stock badges, PKR price per unit, instant sold-out toggle, add/edit harvest form with photo uploads, and weekend bulk restock modal tool.
+  - Pre-Order Workflow (`farmer/orders.php`): Status pill tabs with dynamic counts, interactive queue, order detail drawer, 1-click status transitions (`placed` -> `accepted` / `declined` -> `ready` -> `completed`), automatic inventory restore on decline, and instant customer notifications.
+  - Stall Profile & Location Pin (`farmer/profile.php`): Stall branding, operating days, pickup window times, order cutoff hours, interactive Leaflet + OpenStreetMap pin picker, and market association checkboxes.
+  - Review Management (`farmer/reviews.php`): Reputation analytics card with star distribution breakdown (5★ to 1★), verified customer feedback stream, and inline public stall reply tool.
 
 - **Phase 3: Customer Module**
   - Customer Hub (`customer/dashboard.php`): SaaS profile greeting bar, ready-for-pickup alert banner, 4 KPI metric cards (Total Pre-Orders, In Progress, Ready, Farm Spend), recent orders feed, and saved favorites quick reorder widget.
