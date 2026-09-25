@@ -160,17 +160,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect(BASE_URL . 'farmer/products.php');
     }
 
-    // 4. QUICK BULK RESTOCK / TEMPLATE
+    // 4. BULK RESTOCK PRODUCT QUANTITIES
     if ($post_action === 'bulk_restock') {
-        $add_qty = (int)($_POST['restock_amount'] ?? 10);
-        if ($add_qty > 0) {
+        $restock_quantities = $_POST['restock_qty'] ?? [];
+        $total_updated = 0;
+        $total_added = 0;
+
+        if (is_array($restock_quantities) && !empty($restock_quantities)) {
             try {
-                $stmt = $pdo->prepare("UPDATE products SET quantity_available = quantity_available + :qty, is_sold_out = 0 WHERE farmer_id = :fid");
-                $stmt->execute([':qty' => $add_qty, ':fid' => $farmer_id]);
-                set_flash('success', "Added +{$add_qty} stock to all your items and cleared sold-out flags for the weekend market!");
+                $pdo->beginTransaction();
+                $upd_stmt = $pdo->prepare("
+                    UPDATE products 
+                    SET quantity_available = quantity_available + :add_qty,
+                        is_sold_out = CASE WHEN (quantity_available + :add_qty_chk) > 0 THEN 0 ELSE is_sold_out END
+                    WHERE product_id = :pid AND farmer_id = :fid
+                ");
+
+                foreach ($restock_quantities as $pid => $add_qty) {
+                    $pid = (int)$pid;
+                    $add_qty = (int)$add_qty;
+
+                    if ($pid > 0 && $add_qty > 0) {
+                        $upd_stmt->execute([
+                            ':add_qty'     => $add_qty,
+                            ':add_qty_chk' => $add_qty,
+                            ':pid'         => $pid,
+                            ':fid'         => $farmer_id
+                        ]);
+                        if ($upd_stmt->rowCount() > 0) {
+                            $total_updated++;
+                            $total_added += $add_qty;
+                        }
+                    }
+                }
+                $pdo->commit();
+
+                if ($total_updated > 0) {
+                    set_flash('success', "Stock updated successfully for {$total_updated} " . ($total_updated === 1 ? 'product' : 'products') . " (+{$total_added} units added)!");
+                } else {
+                    set_flash('info', 'No stock was updated. Please enter a quantity greater than 0 for the items you wish to restock.');
+                }
             } catch (PDOException $e) {
-                set_flash('danger', 'Bulk restock failed.');
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                error_log("Bulk restock error: " . $e->getMessage());
+                set_flash('danger', 'Failed to update product stock.');
             }
+        } else {
+            set_flash('warning', 'No products submitted for restock.');
         }
         redirect(BASE_URL . 'farmer/products.php');
     }
@@ -193,7 +231,7 @@ if ($action === 'edit' && $edit_id > 0) {
     }
 }
 
-// Fetch list of farmer's products with filters
+// Fetch list of farmer's products with filters (for main table)
 $filter_cat = sanitize_input($_GET['category'] ?? '');
 $search_q = sanitize_input($_GET['q'] ?? '');
 
@@ -220,6 +258,16 @@ try {
     error_log("Fetch farmer products error: " . $e->getMessage());
 }
 
+// Fetch ALL products for this farmer (unfiltered) for the Bulk Restock Tool
+$all_farmer_products = [];
+try {
+    $all_stmt = $pdo->prepare("SELECT product_id, name, category, price, unit, quantity_available, is_sold_out, image_url FROM products WHERE farmer_id = :fid ORDER BY name ASC");
+    $all_stmt->execute([':fid' => $farmer_id]);
+    $all_farmer_products = $all_stmt->fetchAll();
+} catch (PDOException $e) {
+    error_log("Fetch all products for bulk restock error: " . $e->getMessage());
+}
+
 // Compute product summary metrics
 $in_stock_count = 0;
 $sold_out_count = 0;
@@ -240,6 +288,94 @@ $page_title = ($action === 'add' ? 'Add Produce Item' : ($action === 'edit' ? 'E
 require_once __DIR__ . '/includes/header.php';
 ?>
 
+<style>
+.bulk-restock-btn {
+    color: var(--primary, #2E7D4F) !important;
+    border: 1.5px solid rgba(46, 125, 79, 0.35) !important;
+    background-color: #EFF8F2 !important;
+    font-weight: 600;
+    transition: all 0.2s ease-in-out;
+}
+.bulk-restock-btn i {
+    color: var(--primary, #2E7D4F) !important;
+    display: inline-block;
+    transition: transform 0.25s ease, color 0.15s ease;
+}
+.bulk-restock-btn:hover {
+    background-color: var(--primary, #2E7D4F) !important;
+    border-color: var(--primary, #2E7D4F) !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 4px 12px rgba(46, 125, 79, 0.25) !important;
+}
+.bulk-restock-btn:hover i {
+    color: #FFFFFF !important;
+    transform: rotate(180deg);
+}
+.bulk-product-row.has-qty {
+    background-color: #F0FDF4 !important;
+}
+.bulk-product-row.has-qty input {
+    border-color: #2E7D4F !important;
+    background-color: #FFFFFF !important;
+}
+
+/* Bulk Restock Modal Scroll & Layout Enhancements */
+#bulkRestockModal .modal-dialog-scrollable .modal-content {
+    max-height: calc(100vh - 3rem);
+    display: flex;
+    flex-direction: column;
+}
+#bulkRestockModal form {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-height: calc(100vh - 3rem);
+    min-height: 0;
+}
+#bulkRestockModal .modal-body {
+    overflow-y: auto !important;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+#bulkRestockModal .bulk-table-container {
+    max-height: 380px;
+    overflow-y: auto !important;
+    overflow-x: auto;
+    border: 1px solid #E2E8F0;
+}
+#bulkRestockModal .bulk-table-container thead th {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 5 !important;
+    background-color: #F8FAFC !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+/* Sleek custom scrollbars */
+#bulkRestockModal .modal-body::-webkit-scrollbar,
+#bulkRestockModal .bulk-table-container::-webkit-scrollbar,
+#viewProductModal .modal-body::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+#bulkRestockModal .modal-body::-webkit-scrollbar-track,
+#bulkRestockModal .bulk-table-container::-webkit-scrollbar-track,
+#viewProductModal .modal-body::-webkit-scrollbar-track {
+    background: #F1F5F9;
+    border-radius: 4px;
+}
+#bulkRestockModal .modal-body::-webkit-scrollbar-thumb,
+#bulkRestockModal .bulk-table-container::-webkit-scrollbar-thumb,
+#viewProductModal .modal-body::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 4px;
+}
+#bulkRestockModal .modal-body::-webkit-scrollbar-thumb:hover,
+#bulkRestockModal .bulk-table-container::-webkit-scrollbar-thumb:hover,
+#viewProductModal .modal-body::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8;
+}
+</style>
+
 <!-- Page Header -->
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
     <div>
@@ -248,8 +384,8 @@ require_once __DIR__ . '/includes/header.php';
     </div>
     <div class="d-flex flex-wrap gap-2">
         <?php if ($action === 'list'): ?>
-            <button type="button" class="btn btn-outline-secondary btn-sm rounded-3" data-bs-toggle="modal" data-bs-target="#bulkRestockModal">
-                <i class="bi bi-arrow-repeat me-1 text-success"></i> Bulk Restock Tool
+            <button type="button" class="btn btn-outline-success btn-sm rounded-3 d-inline-flex align-items-center gap-1 bulk-restock-btn" data-bs-toggle="modal" data-bs-target="#bulkRestockModal">
+                <i class="bi bi-arrow-repeat"></i> Bulk Restock Tool
             </button>
             <a href="<?= BASE_URL ?>farmer/products.php?action=add" class="btn btn-primary btn-sm rounded-3">
                 <i class="bi bi-plus-circle me-1"></i> Add New Harvest Item
@@ -605,30 +741,146 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </div>
 
-<!-- Bulk Weekly Restock Modal -->
+<!-- Bulk Restock Produce Modal -->
 <div class="modal fade" id="bulkRestockModal" tabindex="-1" aria-labelledby="bulkRestockLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-            <form action="<?= BASE_URL ?>farmer/products.php" method="POST">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <form action="<?= BASE_URL ?>farmer/products.php" method="POST" id="bulkRestockForm" class="d-flex flex-column h-100">
                 <?= csrf_field() ?>
                 <input type="hidden" name="form_action" value="bulk_restock">
-                <div class="modal-header border-bottom py-3">
-                    <h5 class="modal-title fs-6 fw-bold" id="bulkRestockLabel"><i class="bi bi-arrow-repeat text-primary me-2"></i>Weekend Market Quick Restock</h5>
+                <div class="modal-header border-bottom py-3 px-4 bg-light d-flex justify-content-between align-items-center flex-shrink-0">
+                    <div>
+                        <h5 class="modal-title fs-6 fw-bold mb-0" id="bulkRestockLabel">
+                            <i class="bi bi-arrow-repeat text-primary me-2"></i>Bulk Restock Produce Inventory
+                        </h5>
+                        <small class="text-muted">Add stock to your listed items for upcoming market days</small>
+                    </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <p class="small text-muted mb-3">
-                        Preparing for this weekend's market? This utility adds stock to all of your listed items and resets any "Sold Out" tags back to "Available".
-                    </p>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold" for="restock_amount">Add Quantity to Every Item</label>
-                        <input type="number" min="1" max="500" class="form-control" id="restock_amount" name="restock_amount" value="15" required>
-                        <div class="form-text small">E.g., enter 15 to increase every product's stock by +15.</div>
-                    </div>
+                    <?php if (!empty($all_farmer_products)): ?>
+                        <!-- Quick Actions Toolbar -->
+                        <div class="p-3 bg-light rounded-3 border mb-3 flex-shrink-0">
+                            <div class="row g-2 align-items-center">
+                                <div class="col-md-5">
+                                    <label class="small fw-semibold text-muted d-block mb-1" for="bulkModalSearch">
+                                        <i class="bi bi-search me-1"></i>Filter Produce
+                                    </label>
+                                    <input type="text" id="bulkModalSearch" class="form-control form-control-sm bg-white" placeholder="Search by name or category...">
+                                </div>
+                                <div class="col-md-7">
+                                    <label class="small fw-semibold text-muted d-block mb-1">
+                                        <i class="bi bi-lightning-charge me-1 text-warning"></i>Quick Set All Items
+                                    </label>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="input-group input-group-sm" style="max-width: 140px;">
+                                            <span class="input-group-text bg-white fw-bold">+</span>
+                                            <input type="number" id="quickBulkAmount" min="0" max="9999" class="form-control bg-white" placeholder="10" value="10">
+                                        </div>
+                                        <button type="button" id="btnApplyAll" class="btn btn-primary btn-sm rounded-2">
+                                            Set All
+                                        </button>
+                                        <button type="button" id="btnClearAll" class="btn btn-outline-secondary btn-sm rounded-2">
+                                            Reset to 0
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Produce Items List Table -->
+                        <div class="table-responsive border rounded-3 bulk-table-container">
+                            <table class="table table-hover align-middle mb-0" id="bulkRestockTable">
+                                <thead class="table-light small sticky-top">
+                                    <tr>
+                                        <th style="min-width: 220px;">Produce Item</th>
+                                        <th class="text-center" style="width: 140px;">Current Stock</th>
+                                        <th class="text-center" style="width: 180px;">Add Quantity</th>
+                                        <th class="text-end" style="width: 130px;">New Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($all_farmer_products as $prod): 
+                                        $cur_qty = (int)$prod['quantity_available'];
+                                        $is_out = $prod['is_sold_out'] || $cur_qty <= 0;
+                                    ?>
+                                        <tr class="bulk-product-row" data-name="<?= e(strtolower($prod['name'])) ?>" data-cat="<?= e(strtolower($prod['category'])) ?>" id="row_<?= $prod['product_id'] ?>">
+                                            <td>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <div class="rounded bg-light d-flex align-items-center justify-content-center text-secondary border flex-shrink-0" style="width: 38px; height: 38px; overflow: hidden;">
+                                                        <?php if (!empty($prod['image_url'])): ?>
+                                                            <img src="<?= e(get_image_url($prod['image_url'])) ?>" alt="<?= e($prod['name']) ?>" class="w-100 h-100 object-fit-cover" onerror="this.src='https://placehold.co/100x100?text=Produce'">
+                                                        <?php else: ?>
+                                                            <i class="bi bi-box-seam fs-6"></i>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                    <div class="text-truncate">
+                                                        <div class="fw-semibold text-dark text-truncate" style="max-width: 190px;" title="<?= e($prod['name']) ?>">
+                                                            <?= e($prod['name']) ?>
+                                                        </div>
+                                                        <span class="badge bg-light text-secondary border px-1 py-0" style="font-size: 0.68rem;"><?= e($prod['category']) ?></span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <?php if ($is_out): ?>
+                                                    <span class="badge bg-danger-subtle text-danger">0 <?= e($prod['unit']) ?> (Sold Out)</span>
+                                                <?php else: ?>
+                                                    <span class="fw-semibold text-dark"><?= $cur_qty ?></span> <span class="small text-muted"><?= e($prod['unit']) ?></span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-light text-muted fw-bold">+</span>
+                                                    <input type="number" 
+                                                           name="restock_qty[<?= $prod['product_id'] ?>]" 
+                                                           id="restock_<?= $prod['product_id'] ?>" 
+                                                           min="0" 
+                                                           max="9999" 
+                                                           value="0" 
+                                                           class="form-control text-center fw-bold restock-qty-input" 
+                                                           data-current="<?= $cur_qty ?>" 
+                                                           data-pid="<?= $prod['product_id'] ?>"
+                                                           placeholder="0">
+                                                    <span class="input-group-text bg-light text-muted small"><?= e($prod['unit']) ?></span>
+                                                </div>
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="fw-bold text-success new-total-preview" id="preview_<?= $prod['product_id'] ?>">
+                                                    <?= $cur_qty ?>
+                                                </span>
+                                                <span class="small text-muted"><?= e($prod['unit']) ?></span>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php else: ?>
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary-subtle"></i>
+                            <h6 class="fw-bold mb-1">No Produce Items Listed Yet</h6>
+                            <p class="small mb-3">Add items to your catalog before using the bulk restock tool.</p>
+                            <a href="<?= BASE_URL ?>farmer/products.php?action=add" class="btn btn-primary btn-sm">
+                                <i class="bi bi-plus-circle me-1"></i> Add Produce Item
+                            </a>
+                        </div>
+                    <?php endif; ?>
                 </div>
-                <div class="modal-footer border-top py-2">
-                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-3" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary btn-sm rounded-3">Apply Weekend Restock</button>
+                <div class="modal-footer border-top py-3 px-4 bg-light d-flex justify-content-between align-items-center">
+                    <div>
+                        <span id="bulkSummaryCount" class="small text-muted fw-medium">
+                            <i class="bi bi-info-circle me-1"></i>Enter quantity to add to any item
+                        </span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm rounded-3" data-bs-dismiss="modal">Cancel</button>
+                        <?php if (!empty($all_farmer_products)): ?>
+                            <button type="submit" class="btn btn-primary btn-sm rounded-3 px-3" id="bulkSubmitBtn">
+                                <i class="bi bi-check2-circle me-1"></i> Apply Restock
+                            </button>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </form>
         </div>
@@ -782,6 +1034,92 @@ document.addEventListener('DOMContentLoaded', function() {
                 viewModal.show();
             });
         });
+    }
+
+    // Bulk Restock Modal Logic
+    const restockInputs = document.querySelectorAll('.restock-qty-input');
+    const bulkSearch = document.getElementById('bulkModalSearch');
+    const btnApplyAll = document.getElementById('btnApplyAll');
+    const btnClearAll = document.getElementById('btnClearAll');
+    const quickBulkAmount = document.getElementById('quickBulkAmount');
+    const bulkSummaryCount = document.getElementById('bulkSummaryCount');
+
+    function updateRestockSummary() {
+        let itemsCount = 0;
+        let totalUnits = 0;
+
+        restockInputs.forEach(function(input) {
+            const addVal = parseInt(input.value, 10) || 0;
+            const curVal = parseInt(input.getAttribute('data-current'), 10) || 0;
+            const pid = input.getAttribute('data-pid');
+            const previewEl = document.getElementById('preview_' + pid);
+            const rowEl = document.getElementById('row_' + pid);
+
+            if (previewEl) {
+                previewEl.textContent = (curVal + Math.max(0, addVal));
+            }
+
+            if (addVal > 0) {
+                itemsCount++;
+                totalUnits += addVal;
+                if (rowEl) rowEl.classList.add('has-qty');
+            } else {
+                if (rowEl) rowEl.classList.remove('has-qty');
+            }
+        });
+
+        if (bulkSummaryCount) {
+            if (itemsCount > 0) {
+                bulkSummaryCount.innerHTML = '<span class="text-success fw-bold"><i class="bi bi-check-circle me-1"></i>' + itemsCount + ' ' + (itemsCount === 1 ? 'item' : 'items') + ' marked (+ ' + totalUnits + ' total units)</span>';
+            } else {
+                bulkSummaryCount.innerHTML = '<span class="text-muted"><i class="bi bi-info-circle me-1"></i>Enter quantity to add to any item</span>';
+            }
+        }
+    }
+
+    if (restockInputs.length > 0) {
+        restockInputs.forEach(function(input) {
+            input.addEventListener('input', updateRestockSummary);
+            input.addEventListener('change', updateRestockSummary);
+        });
+
+        if (btnApplyAll && quickBulkAmount) {
+            btnApplyAll.addEventListener('click', function() {
+                const val = Math.max(0, parseInt(quickBulkAmount.value, 10) || 0);
+                restockInputs.forEach(function(input) {
+                    const row = input.closest('.bulk-product-row');
+                    if (row && row.style.display !== 'none') {
+                        input.value = val;
+                    }
+                });
+                updateRestockSummary();
+            });
+        }
+
+        if (btnClearAll) {
+            btnClearAll.addEventListener('click', function() {
+                restockInputs.forEach(function(input) {
+                    input.value = 0;
+                });
+                updateRestockSummary();
+            });
+        }
+
+        if (bulkSearch) {
+            bulkSearch.addEventListener('input', function() {
+                const q = this.value.toLowerCase().trim();
+                const rows = document.querySelectorAll('.bulk-product-row');
+                rows.forEach(function(row) {
+                    const name = row.getAttribute('data-name') || '';
+                    const cat = row.getAttribute('data-cat') || '';
+                    if (!q || name.includes(q) || cat.includes(q)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
     }
 });
 </script>

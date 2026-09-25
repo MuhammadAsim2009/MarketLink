@@ -76,7 +76,333 @@ $user_initial = $farmer_name ? strtoupper(mb_substr($farmer_name, 0, 1)) : 'F';
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
     <!-- MarketLink SaaS Design Tokens & Stylesheet -->
-    <link rel="stylesheet" href="<?= ASSETS_URL ?>css/style.css">
+    <link rel="stylesheet" href="<?= ASSETS_URL ?>css/style.css?v=<?= time() ?>">
+
+    <style>
+    /* Farmer Portal SaaS Sidebar & Layout Direct Styles */
+    .farmer-app-wrapper {
+        display: flex;
+        min-height: 100vh;
+        background-color: #F8FAFC;
+        color: var(--text, #1A2E22);
+        font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+        position: relative;
+    }
+    .farmer-sidebar {
+        width: 270px;
+        max-width: 270px;
+        background: #FFFFFF;
+        border-right: 1px solid #E2E8F0;
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1045;
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+        box-sizing: border-box;
+    }
+    .farmer-sidebar * {
+        box-sizing: border-box;
+    }
+    .farmer-sidebar-content {
+        flex: 1 1 auto;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-bottom: 0.75rem;
+    }
+    .farmer-sidebar-content::-webkit-scrollbar {
+        width: 4px;
+    }
+    .farmer-sidebar-content::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .farmer-sidebar-content::-webkit-scrollbar-thumb {
+        background: #E2E8F0;
+        border-radius: 4px;
+    }
+    .farmer-sidebar-brand {
+        height: 72px;
+        padding: 0 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid #F1F5F9;
+        flex-shrink: 0;
+        width: 100%;
+        overflow: hidden;
+        gap: 0.5rem;
+    }
+    .farmer-brand-title {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        text-decoration: none;
+        font-family: var(--font-display, inherit);
+        font-weight: 800;
+        font-size: 1.15rem;
+        color: var(--text, #1A2E22);
+    }
+    .farmer-brand-title .brand-logo-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, var(--primary, #2E7D4F) 0%, #1e5a36 100%);
+        color: #FFFFFF;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        box-shadow: 0 2px 6px rgba(46, 125, 79, 0.3);
+    }
+    .farmer-brand-badge {
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        background: rgba(46, 125, 79, 0.1);
+        color: var(--primary, #2E7D4F);
+        padding: 2px 7px;
+        border-radius: 4px;
+        letter-spacing: 0.05em;
+    }
+    .farmer-stall-banner {
+        padding: 0.9rem 1.25rem;
+        background: #FAFDFC;
+        border-bottom: 1px solid #F1F5F9;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        overflow: hidden;
+        min-width: 0;
+        flex-shrink: 0;
+    }
+    .farmer-stall-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        background: #E8F5E9;
+        color: #2E7D4F;
+        font-weight: 700;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        border: 1px solid rgba(46, 125, 79, 0.15);
+    }
+    .farmer-nav-section-title {
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #94A3B8;
+        padding: 1rem 1.25rem 0.35rem;
+    }
+    .farmer-nav-list {
+        list-style: none;
+        padding: 0.35rem 0.75rem;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+    .farmer-nav-link {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.62rem 0.85rem;
+        color: #475569;
+        font-size: 0.875rem;
+        font-weight: 500;
+        border-radius: 8px;
+        transition: all 0.15s ease-in-out;
+        text-decoration: none;
+    }
+    .farmer-nav-link-content {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    .farmer-nav-link .nav-icon {
+        font-size: 1.15rem;
+        width: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #64748B;
+        transition: color 0.15s ease-in-out;
+    }
+    .farmer-nav-link:hover {
+        color: #2E7D4F;
+        background: #E8F5E9;
+    }
+    .farmer-nav-link:hover .nav-icon {
+        color: #2E7D4F;
+    }
+    .farmer-nav-link.active {
+        color: #FFFFFF;
+        background: #2E7D4F;
+        font-weight: 600;
+        box-shadow: 0 2px 8px rgba(46, 125, 79, 0.25);
+    }
+    .farmer-nav-link.active .nav-icon {
+        color: #FFFFFF;
+    }
+    .farmer-sidebar-footer {
+        margin-top: auto;
+        padding: 0.85rem 1rem;
+        border-top: 1px solid #E2E8F0;
+        background: #FFFFFF;
+        flex-shrink: 0;
+        position: sticky;
+        bottom: 0;
+        z-index: 10;
+        box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.02);
+    }
+    .farmer-user-chip {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.55rem 0.65rem;
+        border-radius: 8px;
+        background: #F8FAFC;
+        border: 1px solid #E2E8F0;
+        gap: 0.5rem;
+        width: 100%;
+        min-width: 0;
+        overflow: hidden;
+    }
+    .farmer-user-avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: #2E7D4F;
+        color: #FFFFFF;
+        font-weight: 700;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .farmer-user-name {
+        font-size: 0.825rem;
+        font-weight: 600;
+        color: #1E293B;
+        line-height: 1.25;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: block;
+    }
+    .farmer-user-role {
+        font-size: 0.7rem;
+        line-height: 1.25;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: block;
+    }
+    .farmer-logout-btn {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        color: #EF4444;
+        background: #FEE2E2;
+        text-decoration: none;
+        transition: all 0.15s ease-in-out;
+        flex-shrink: 0;
+        border: none;
+    }
+    .farmer-logout-btn:hover {
+        background: #EF4444;
+        color: #FFFFFF;
+        transform: scale(1.05);
+    }
+    .farmer-main-wrapper {
+        flex: 1 1 0%;
+        margin-left: 270px;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        background: #F8FAFC;
+        min-height: 100vh;
+    }
+    .farmer-topbar {
+        height: 72px;
+        background: #FFFFFF;
+        border-bottom: 1px solid #E2E8F0;
+        padding: 0 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: sticky;
+        top: 0;
+        z-index: 1030;
+    }
+    .farmer-content-body {
+        padding: 2rem;
+        flex: 1 1 auto;
+    }
+    .farmer-stat-card {
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
+        padding: 1.35rem 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .farmer-stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+    .farmer-icon-circle {
+        width: 48px;
+        height: 48px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.35rem;
+    }
+    .farmer-sidebar-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.5);
+        backdrop-filter: blur(2px);
+        z-index: 1040;
+        display: none;
+        opacity: 0;
+        transition: opacity 0.25s ease-in-out;
+    }
+    .farmer-sidebar-backdrop.show {
+        display: block;
+        opacity: 1;
+    }
+    @media (max-width: 991.98px) {
+        .farmer-sidebar {
+            transform: translateX(-100%);
+        }
+        .farmer-sidebar.open {
+            transform: translateX(0);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
+        }
+        .farmer-main-wrapper {
+            margin-left: 0;
+        }
+        .farmer-topbar {
+            padding: 0 1.25rem;
+        }
+        .farmer-content-body {
+            padding: 1.25rem 1rem;
+        }
+    }
+    </style>
 </head>
 <body class="bg-light">
 

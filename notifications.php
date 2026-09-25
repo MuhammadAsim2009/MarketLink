@@ -148,17 +148,20 @@ $filtered_notifications = array_filter($all_notifications, function($n) use ($fi
 });
 
 $is_farmer = ($current_role === ROLE_FARMER);
+$is_admin = ($current_role === ROLE_ADMIN);
 $page_title = 'Notifications Center';
 $active_nav = 'notifications';
 
 if ($is_farmer) {
     require_once __DIR__ . '/farmer/includes/header.php';
+} elseif ($is_admin) {
+    require_once __DIR__ . '/admin/includes/header.php';
 } else {
     require_once __DIR__ . '/includes/header.php';
 }
 ?>
 
-<?php if (!$is_farmer): ?>
+<?php if (!$is_farmer && !$is_admin): ?>
 <div class="container py-4">
 <?php endif; ?>
 
@@ -380,7 +383,7 @@ if ($is_farmer) {
             </div>
         </div>
     </div>
-<?php if (!$is_farmer): ?>
+<?php if (!$is_farmer && !$is_admin): ?>
 </div>
 <?php endif; ?>
 
@@ -422,6 +425,8 @@ if ($is_farmer) {
 <?php 
 if ($is_farmer) {
     require_once __DIR__ . '/farmer/includes/footer.php';
+} elseif ($is_admin) {
+    require_once __DIR__ . '/admin/includes/footer.php';
 } else {
     require_once __DIR__ . '/includes/footer.php';
 }

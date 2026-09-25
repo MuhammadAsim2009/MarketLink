@@ -11,8 +11,9 @@ if (is_logged_in()) {
     redirect_by_role(get_logged_in_user_role());
 }
 
-$error = '';
+$error     = '';
 $email_val = '';
+$user      = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
@@ -30,19 +31,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $user = $stmt->fetch();
 
                 if ($user && password_verify($password, $user['password_hash'])) {
-                    // Check status
+                    // Check if account is suspended
                     if ($user['status'] === STATUS_SUSPENDED) {
                         $error = 'Your account has been suspended. Please contact the platform administrator.';
+
+                    // Block pending farmers — must wait for admin approval
+                    } elseif ($user['status'] === STATUS_PENDING && $user['role'] === ROLE_FARMER) {
+                        $error = '<strong>Account Pending Approval</strong><br>Your farmer stall registration is currently under review by our admin team. You will be able to log in once your account has been approved. Please check back later or contact support.';
+
                     } else {
                         // Establish Session
                         $_SESSION['user_id'] = (int)$user['user_id'];
-                        $_SESSION['role'] = $user['role'];
+                        $_SESSION['role']    = $user['role'];
                         $_SESSION['user_name'] = $user['name'];
-                        $_SESSION['email'] = $user['email'];
-
-                        if ($user['status'] === STATUS_PENDING && $user['role'] === ROLE_FARMER) {
-                            $_SESSION['is_pending_approval'] = true;
-                        }
+                        $_SESSION['email']   = $user['email'];
 
                         // Success notification & redirect
                         set_flash('success', 'Welcome back, ' . $user['name'] . '!');
@@ -136,11 +138,37 @@ require_once __DIR__ . '/../includes/header.php';
                         <p class="text-muted small mb-0">Enter your credentials to access pre-orders, favorites, or stall management</p>
                     </div>
 
+
                     <?php if (!empty($error)): ?>
-                        <div class="alert alert-danger py-2 small mb-4 d-flex align-items-center gap-2">
-                            <i class="bi bi-exclamation-triangle-fill flex-shrink-0"></i>
-                            <div><?= e($error) ?></div>
-                        </div>
+                        <?php if ($user && ($user['status'] ?? '') === STATUS_PENDING && ($user['role'] ?? '') === ROLE_FARMER): ?>
+                            <!-- Pending Approval Notice Card -->
+                            <div class="alert mb-4 p-0 border-0 overflow-hidden" style="border-radius: 12px;">
+                                <div class="d-flex" style="border: 1.5px solid #F59E0B; border-radius: 12px; overflow: hidden;">
+                                    <!-- Left accent bar -->
+                                    <div style="width: 6px; flex-shrink: 0; background: linear-gradient(180deg, #F59E0B, #D97706);"></div>
+                                    <div class="p-3 flex-grow-1" style="background: #FFFBEB;">
+                                        <div class="d-flex align-items-start gap-2">
+                                            <div class="d-flex align-items-center justify-content-center flex-shrink-0 rounded-circle" style="width: 34px; height: 34px; background: #FEF3C7; border: 1.5px solid #F59E0B;">
+                                                <i class="bi bi-hourglass-split" style="color: #D97706; font-size: 0.95rem;"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold small" style="color: #92400E;">Account Pending Admin Approval</div>
+                                                <div class="small mt-1" style="color: #78350F; line-height: 1.5;">
+                                                    Your farmer stall registration is <strong>under review</strong> by our admin team. 
+                                                    You'll receive access once approved. Please check back later or contact 
+                                                    <a href="mailto:support@marketlink.test" class="fw-semibold" style="color: #D97706;">support@marketlink.test</a>.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php else: ?>
+                            <div class="alert alert-danger py-2 small mb-4 d-flex align-items-center gap-2" style="border-radius: 10px;">
+                                <i class="bi bi-exclamation-triangle-fill flex-shrink-0"></i>
+                                <div><?= e($error) ?></div>
+                            </div>
+                        <?php endif; ?>
                     <?php endif; ?>
 
                     <form action="<?= BASE_URL ?>auth/login.php" method="POST" novalidate>

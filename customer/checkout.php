@@ -6,6 +6,41 @@
 $required_role = 'customer';
 require_once __DIR__ . '/../includes/auth-check.php';
 
+/**
+ * Generate 1-hour pickup slot <option> tags from a stall's window.
+ * Handles cross-midnight windows (e.g. 18:00 -> 02:00 next day).
+ */
+function generate_slot_options(string $start, string $end, string $selected = ''): string
+{
+    $to_mins = fn(string $t): int => (intval(explode(':', $t)[0]) * 60) + intval(explode(':', $t)[1]);
+
+    $start_m = $to_mins($start);
+    $end_m   = $to_mins($end);
+
+    // Cross-midnight support: if end <= start, add 24 h
+    if ($end_m <= $start_m) {
+        $end_m += 1440;
+    }
+
+    $fmt = function (int $m): string {
+        $m    = $m % 1440;
+        $h    = intdiv($m, 60);
+        $min  = $m % 60;
+        $ampm = $h >= 12 ? 'PM' : 'AM';
+        $h12  = $h % 12 ?: 12;
+        return sprintf('%02d:%02d %s', $h12, $min, $ampm);
+    };
+
+    $html = '';
+    for ($cur = $start_m; $cur + 60 <= $end_m; $cur += 60) {
+        $label = $fmt($cur) . ' – ' . $fmt($cur + 60);
+        $sel   = ($label === $selected) ? ' selected' : '';
+        $html .= "<option value=\"" . htmlspecialchars($label, ENT_QUOTES) . "\"{$sel}>" . htmlspecialchars($label) . "</option>\n";
+    }
+
+    return $html ?: '<option value="" disabled>No slots available for this window</option>';
+}
+
 $customer_id = get_logged_in_user_id();
 
 if (empty($_SESSION['cart'])) {
@@ -236,15 +271,24 @@ require_once __DIR__ . '/../includes/header.php';
 
                                 <div class="col-md-6">
                                     <label class="form-label small fw-semibold" for="slot_<?= $fid ?>">Time Slot <span class="text-danger">*</span></label>
+                                    <?php
+                                        // Retrieve any previously selected slot on POST validation failure
+                                        $prev_slot = sanitize_input($_POST['pickup_slot'][$fid] ?? '');
+                                    ?>
                                     <select class="form-select <?= isset($errors["slot_{$fid}"]) ? 'is-invalid' : '' ?>" id="slot_<?= $fid ?>" name="pickup_slot[<?= $fid ?>]" required>
-                                        <option value="08:00 AM - 09:00 AM">08:00 AM - 09:00 AM</option>
-                                        <option value="09:00 AM - 10:00 AM">09:00 AM - 10:00 AM</option>
-                                        <option value="10:00 AM - 11:00 AM" selected>10:00 AM - 11:00 AM</option>
-                                        <option value="11:00 AM - 12:00 PM">11:00 AM - 12:00 PM</option>
-                                        <option value="12:00 PM - 01:00 PM">12:00 PM - 01:00 PM</option>
-                                        <option value="01:00 PM - 02:00 PM">01:00 PM - 02:00 PM</option>
+                                        <option value="" disabled <?= empty($prev_slot) ? 'selected' : '' ?>>Choose a time slot</option>
+                                        <?= generate_slot_options($f_data['pickup_start'], $f_data['pickup_end'], $prev_slot) ?>
                                     </select>
-                                    <div class="form-text small">Stall pickup window: <?= date('h:i A', strtotime($f_data['pickup_start'])) ?> - <?= date('h:i A', strtotime($f_data['pickup_end'])) ?></div>
+                                    <div class="d-flex flex-wrap gap-2 mt-2">
+                                        <span class="d-inline-flex align-items-center gap-1 px-2 py-1 rounded-pill" style="background:#EFF6FF; border:1px solid #BFDBFE; font-size:0.75rem; color:#1D4ED8;">
+                                            <i class="bi bi-clock-fill" style="font-size:0.7rem;"></i>
+                                            <span>Window: <strong><?= date('h:i A', strtotime($f_data['pickup_start'])) ?> – <?= date('h:i A', strtotime($f_data['pickup_end'])) ?></strong></span>
+                                        </span>
+                                        <span class="d-inline-flex align-items-center gap-1 px-2 py-1 rounded-pill" style="background:#FFFBEB; border:1px solid #FDE68A; font-size:0.75rem; color:#92400E;">
+                                            <i class="bi bi-exclamation-circle-fill" style="font-size:0.7rem;"></i>
+                                            <span>Cutoff: <strong><?= $f_data['cutoff_hours'] ?>h before pickup</strong></span>
+                                        </span>
+                                    </div>
                                     <?php if (isset($errors["slot_{$fid}"])): ?><div class="invalid-feedback"><?= e($errors["slot_{$fid}"]) ?></div><?php endif; ?>
                                 </div>
                             </div>
@@ -252,6 +296,9 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
                 <?php endforeach; ?>
             </div>
+
+
+
 
             <!-- Pre-Order Confirmation Box -->
             <div class="col-lg-4">
