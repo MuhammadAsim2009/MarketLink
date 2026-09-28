@@ -132,7 +132,7 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 
     <!-- Interactive Map View -->
-    <div class="card shadow-sm border-0 mb-4 overflow-hidden rounded-4">
+    <div class="card shadow-sm border-0 mb-4 rounded-4">
         <div class="card-header bg-white py-3 px-4 d-flex flex-wrap justify-content-between align-items-center gap-2">
             <div>
                 <h5 class="card-title mb-0 fs-6 fw-bold">
@@ -284,10 +284,17 @@ const markersData = <?= json_encode($map_markers) ?>;
 
 document.addEventListener('DOMContentLoaded', function () {
     const defaultCenter = [27.5590, 68.2120];
-    map = L.map('marketsMap').setView(defaultCenter, 12);
+
+    // Use setTimeout to ensure the map container is fully rendered before init
+    setTimeout(function() {
+    map = L.map('marketsMap', {
+        zoomControl: true,
+        scrollWheelZoom: false
+    }).setView(defaultCenter, 12);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
     }).addTo(map);
 
     // Custom Market Leaflet Icon
@@ -336,6 +343,11 @@ document.addEventListener('DOMContentLoaded', function () {
     if (bounds.length > 0) {
         map.fitBounds(bounds, { padding: [40, 40] });
     }
+
+    // Force map to recalculate its size after container is fully visible
+    map.invalidateSize();
+
+    }, 100); // end setTimeout
 
     // Geolocation "Near Me" Button Handler
     const btnGeo = document.getElementById('btnGeolocate');
@@ -395,6 +407,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 function focusMap(lat, lng, name) {
     if (map && lat && lng) {
+        map.invalidateSize();
         map.setView([lat, lng], 15);
         window.scrollTo({ top: document.getElementById('marketsMap').offsetTop - 90, behavior: 'smooth' });
     }
