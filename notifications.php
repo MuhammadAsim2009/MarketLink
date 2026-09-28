@@ -193,7 +193,7 @@ if ($is_farmer) {
             <?php endif; ?>
 
             <?php if ($read_count > 0): ?>
-                <form action="<?= BASE_URL ?>notifications.php" method="POST" class="d-inline" onsubmit="return confirm('Clear all read notifications?');">
+                <form action="<?= BASE_URL ?>notifications.php" method="POST" class="d-inline" data-confirm="Are you sure you want to permanently clear all read notifications?" data-confirm-title="Clear Notifications" data-confirm-type="warning" data-confirm-btn="Yes, Clear All">
                     <?= csrf_field() ?>
                     <input type="hidden" name="action" value="clear_read">
                     <button type="submit" class="btn btn-ghost btn-sm text-muted" title="Clear read notifications">

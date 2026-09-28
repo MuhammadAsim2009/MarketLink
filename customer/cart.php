@@ -182,7 +182,7 @@ require_once __DIR__ . '/../includes/header.php';
             <p class="text-muted small mb-0">Review your farm-fresh items before choosing pickup schedules</p>
         </div>
         <?php if (!empty($cart_items)): ?>
-            <form action="<?= BASE_URL ?>customer/cart.php" method="POST" onsubmit="return confirm('Clear all items from your basket?');">
+            <form action="<?= BASE_URL ?>customer/cart.php" method="POST" data-confirm="Are you sure you want to remove all produce items from your basket?" data-confirm-title="Clear Basket" data-confirm-type="warning" data-confirm-btn="Yes, Clear All">
                 <?= csrf_field() ?>
                 <input type="hidden" name="action" value="clear_cart">
                 <button type="submit" class="btn btn-outline-danger btn-sm">

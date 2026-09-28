@@ -248,33 +248,84 @@ require_once __DIR__ . '/includes/header.php';
 
             <!-- Right Column: Interactive OpenStreetMap Location Pin Picker -->
             <div class="col-lg-6">
-                <div class="card shadow-sm border-0 mb-4">
-                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0 fs-6"><i class="bi bi-pin-map-fill text-accent me-2"></i>Stall Map Pin (Leaflet & OpenStreetMap)</h5>
-                        <span class="badge bg-secondary-subtle text-secondary small">Click or drag pin</span>
+                <div class="card shadow-sm border-0 mb-4 rounded-4 overflow-hidden">
+                    <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title mb-0 fs-6 fw-bold"><i class="bi bi-pin-map-fill text-primary me-2"></i>Stall Map Pin (OpenStreetMap)</h5>
+                            <small class="text-muted">Click, drag pin, or search to set your exact stall pickup point</small>
+                        </div>
+                        <span class="badge bg-success-subtle text-success small">Interactive Pin</span>
                     </div>
                     <div class="card-body p-4">
-                        <p class="small text-muted mb-3">
-                            Click anywhere on the map or drag the orange pin to set your exact stall / farm location for customer navigation:
-                        </p>
-
-                        <div id="stallMap" style="height: 320px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 1rem;"></div>
-
-                        <div class="row g-2">
-                            <div class="col-md-6">
-                                <label class="form-label small" for="latitude">Latitude</label>
-                                <input type="number" step="0.00000001" class="form-control form-control-sm" id="latitude" name="latitude" value="<?= e($farmer_profile['latitude'] ?? '31.52040000') ?>">
+                        <!-- Location Search & GPS Controls -->
+                        <div class="row g-2 mb-1">
+                            <div class="col-sm-7">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+                                    <input type="text" id="mapSearchInput" class="form-control" placeholder="Search place, OR paste a Google Maps link…">
+                                    <button type="button" id="btnSearchLoc" class="btn btn-primary">Find</button>
+                                </div>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label small" for="longitude">Longitude</label>
-                                <input type="number" step="0.00000001" class="form-control form-control-sm" id="longitude" name="longitude" value="<?= e($farmer_profile['longitude'] ?? '74.35870000') ?>">
+                            <div class="col-sm-5">
+                                <button type="button" id="btnGpsStall" class="btn btn-outline-primary btn-sm w-100 rounded-3" title="Detect your device coordinates">
+                                    <i class="bi bi-crosshair me-1"></i> Use My Location
+                                </button>
                             </div>
+                        </div>
+                        <p class="text-muted mb-2" style="font-size:0.7rem;"><i class="bi bi-info-circle me-1"></i>Paste a Google Maps URL to auto-extract coordinates, or type an address/landmark.</p>
+
+                        <!-- Reverse Geocoding result badge -->
+                        <div id="detectedAddressBadge" class="d-none mb-2 p-2 rounded-2 border bg-success-subtle d-flex align-items-start gap-2" style="font-size:0.78rem;">
+                            <i class="bi bi-geo-alt-fill text-success mt-1 flex-shrink-0"></i>
+                            <div>
+                                <span class="fw-semibold text-success d-block" style="font-size:0.7rem;">Detected Address</span>
+                                <span id="detectedAddressText" class="text-dark"></span>
+                                <button type="button" id="btnFillAddress" class="btn btn-xs btn-success mt-1 py-0 px-2" style="font-size:0.7rem;">
+                                    <i class="bi bi-arrow-down-circle me-1"></i>Fill into Address Field
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="stallMap" style="height: 300px; border-radius: var(--radius-sm); border: 1px solid var(--border-color, #dee2e6); margin-bottom: 0.8rem; overflow: hidden; position: relative;"></div>
+
+                        <!-- Advanced: Collapsible raw coordinates -->
+                        <div class="mb-2">
+                            <a class="text-muted d-flex align-items-center gap-1" data-bs-toggle="collapse" href="#advancedCoordsFarmer" role="button" aria-expanded="false" style="font-size:0.75rem; text-decoration:none;">
+                                <i class="bi bi-chevron-right" id="advChevronFarmer" style="transition:transform .2s;"></i>
+                                <span>⚙️ Advanced: Fine-tune GPS coordinates</span>
+                            </a>
+                            <div class="collapse" id="advancedCoordsFarmer">
+                                <div class="row g-2 mt-1">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold" for="latitude">Latitude</label>
+                                        <input type="number" step="0.00000001" class="form-control form-control-sm font-monospace" id="latitude" name="latitude" value="<?= e($farmer_profile['latitude'] ?? '27.55900000') ?>">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold" for="longitude">Longitude</label>
+                                        <input type="number" step="0.00000001" class="form-control form-control-sm font-monospace" id="longitude" name="longitude" value="<?= e($farmer_profile['longitude'] ?? '68.21200000') ?>">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- GPS Pill + directions -->
+                        <div class="p-2 bg-light rounded-3 border d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-white text-secondary border" style="font-size:0.7rem; font-family:monospace;">
+                                    <i class="bi bi-crosshair me-1"></i>
+                                    <span id="stallGpsPill"><?= number_format((float)($farmer_profile['latitude'] ?? 27.5590), 4) ?>, <?= number_format((float)($farmer_profile['longitude'] ?? 68.2120), 4) ?></span>
+                                </span>
+                                <span class="text-muted" style="font-size:0.68rem;">← Auto-updates</span>
+                            </div>
+                            <a id="previewDirectionsLink" href="https://www.google.com/maps/dir/?api=1&destination=<?= $farmer_profile['latitude'] ?? '27.5590' ?>,<?= $farmer_profile['longitude'] ?? '68.2120' ?>" target="_blank" class="btn btn-outline-success btn-sm py-1 px-2 rounded-2" style="font-size: 0.75rem;">
+                                <i class="bi bi-sign-turn-right-fill me-1"></i> Test Directions
+                            </a>
                         </div>
                     </div>
                 </div>
 
                 <div class="card shadow-xs border-0 p-3 bg-white rounded-4">
-                    <button type="submit" class="btn btn-primary btn-lg w-100 py-2 rounded-3 shadow-xs">
+                    <button type="submit" class="btn btn-primary btn-lg w-100 py-2 rounded-3 shadow-xs fw-bold">
                         <i class="bi bi-check2-circle me-1"></i> Save Stall Configuration
                     </button>
                 </div>
@@ -285,28 +336,266 @@ require_once __DIR__ . '/includes/header.php';
 <!-- Leaflet Map Initialization Script -->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const defaultLat = parseFloat(document.getElementById('latitude').value) || 31.5204;
-    const defaultLng = parseFloat(document.getElementById('longitude').value) || 74.3587;
+    const latInput = document.getElementById('latitude');
+    const lngInput = document.getElementById('longitude');
+    const dirLink = document.getElementById('previewDirectionsLink');
+    const detectedBadge = document.getElementById('detectedAddressBadge');
+    const detectedText = document.getElementById('detectedAddressText');
+    const btnFillAddress = document.getElementById('btnFillAddress');
+    const stallGpsPill = document.getElementById('stallGpsPill');
+    const addressField = document.getElementById('address');
+    const advCollapseEl = document.getElementById('advancedCoordsFarmer');
+    const advChevron = document.getElementById('advChevronFarmer');
 
-    const map = L.map('stallMap').setView([defaultLat, defaultLng], 13);
+    const defaultLat = parseFloat(latInput.value) || 27.5590;
+    const defaultLng = parseFloat(lngInput.value) || 68.2120;
+    let lastReverseGeoAddress = '';
+
+    const map = L.map('stallMap', {
+        zoomControl: true,
+        scrollWheelZoom: true
+    }).setView([defaultLat, defaultLng], 14);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
     }).addTo(map);
+    // Force full tile render after page layout settles
+    setTimeout(function() { map.invalidateSize(); }, 300);
 
-    let marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
+    const stallIcon = L.divIcon({
+        className: 'custom-stall-pin',
+        html: `<div style="background-color:#2E7D4F; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; border:2px solid #fff; box-shadow:0 3px 8px rgba(0,0,0,0.3); font-size:17px;">
+                 <i class="bi bi-shop"></i>
+               </div>`,
+        iconSize: [36, 36],
+        iconAnchor: [18, 18],
+        popupAnchor: [0, -18]
+    });
+
+    let marker = L.marker([defaultLat, defaultLng], { draggable: true, icon: stallIcon }).addTo(map)
+        .bindPopup('<strong>📍 Stall Pickup Point</strong><br>Drag or click map to reposition.')
+        .openPopup();
+
+    // ── Feature 6: Reverse Geocoding ──
+    function reverseGeocode(lat, lng) {
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=17&addressdetails=1`)
+            .then(r => r.json())
+            .then(data => {
+                if (data && data.display_name) {
+                    lastReverseGeoAddress = data.display_name;
+                    detectedText.textContent = data.display_name;
+                    detectedBadge.classList.remove('d-none');
+                }
+            })
+            .catch(() => {}); // Silent – map works without reverse geo
+    }
+
+    // ── Core: update coords, pill, and directions link ──
+    function updateCoords(lat, lng) {
+        latInput.value = lat.toFixed(8);
+        lngInput.value = lng.toFixed(8);
+        if (dirLink) {
+            dirLink.href = `https://www.google.com/maps/dir/?api=1&destination=${lat.toFixed(8)},${lng.toFixed(8)}`;
+        }
+        if (stallGpsPill) {
+            stallGpsPill.textContent = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+        }
+        reverseGeocode(lat, lng);
+    }
+
+    // ── Fill-address button ──
+    if (btnFillAddress && addressField) {
+        btnFillAddress.addEventListener('click', function () {
+            if (lastReverseGeoAddress) {
+                addressField.value = lastReverseGeoAddress;
+                detectedBadge.classList.add('d-none');
+            }
+        });
+    }
+
+    // ── Feature 5: Chevron animation for Advanced collapse ──
+    if (advCollapseEl && advChevron) {
+        advCollapseEl.addEventListener('show.bs.collapse', function () {
+            advChevron.style.transform = 'rotate(90deg)';
+        });
+        advCollapseEl.addEventListener('hide.bs.collapse', function () {
+            advChevron.style.transform = 'rotate(0deg)';
+        });
+    }
 
     marker.on('dragend', function (e) {
         const position = marker.getLatLng();
-        document.getElementById('latitude').value = position.lat.toFixed(8);
-        document.getElementById('longitude').value = position.lng.toFixed(8);
+        updateCoords(position.lat, position.lng);
     });
 
     map.on('click', function (e) {
         marker.setLatLng(e.latlng);
-        document.getElementById('latitude').value = e.latlng.lat.toFixed(8);
-        document.getElementById('longitude').value = e.latlng.lng.toFixed(8);
+        updateCoords(e.latlng.lat, e.latlng.lng);
     });
+
+    // Manual input sync
+    [latInput, lngInput].forEach(function(inp) {
+        inp.addEventListener('change', function() {
+            const lat = parseFloat(latInput.value);
+            const lng = parseFloat(lngInput.value);
+            if (!isNaN(lat) && !isNaN(lng)) {
+                marker.setLatLng([lat, lng]);
+                map.setView([lat, lng], 14);
+                updateCoords(lat, lng);
+            }
+        });
+    });
+
+    // ── Feature 4: GPS Geolocation Handler ──
+    const btnGps = document.getElementById('btnGpsStall');
+    if (btnGps) {
+        btnGps.addEventListener('click', function() {
+            if (!navigator.geolocation) {
+                customAlert({ title: 'GPS Not Supported', message: 'Geolocation is not supported by your browser.', type: 'warning' });
+                return;
+            }
+            btnGps.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Detecting...';
+            btnGps.disabled = true;
+
+            navigator.geolocation.getCurrentPosition(
+                function(pos) {
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+                    btnGps.innerHTML = '<i class="bi bi-check2-circle text-success me-1"></i> GPS Detected';
+                    btnGps.disabled = false;
+                    marker.setLatLng([lat, lng]);
+                    map.setView([lat, lng], 15);
+                    updateCoords(lat, lng);
+                },
+                function(err) {
+                    btnGps.innerHTML = '<i class="bi bi-crosshair me-1"></i> Use My Location';
+                    btnGps.disabled = false;
+                    customAlert({ title: 'GPS Detection Failed', message: 'Could not detect your current coordinates: ' + (err.message || 'Permission denied'), type: 'danger' });
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        });
+    }
+
+    // ── Feature 3: Google Maps URL parser + raw coordinate detector ──
+    function tryExtractGoogleMapsCoords(input) {
+        if (!input) return null;
+        const decoded = decodeURIComponent(input);
+
+        // Pattern 1: Exact Place Pin (!3dlat!4dlng or !8m2!3dlat!4dlng) - HIGHEST PRIORITY
+        let m = decoded.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+        if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+
+        // Pattern 2: loc:lat,lng
+        m = decoded.match(/loc:(-?\d+\.\d+)[,\s+]+(-?\d+\.\d+)/i);
+        if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+
+        // Pattern 3: ?q=lat,lng or &q=lat,lng
+        m = decoded.match(/[?&]q=(-?\d+\.\d+)[,\s+]+(-?\d+\.\d+)/);
+        if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+
+        // Pattern 4: ?query=lat,lng
+        m = decoded.match(/[?&]query=(-?\d+\.\d+)[,\s+]+(-?\d+\.\d+)/);
+        if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+
+        // Pattern 5: /place/lat,lng or /place/lat+lng or /place/lat lng
+        m = decoded.match(/\/place\/(-?\d+\.\d+)[,\s+]+(-?\d+\.\d+)/);
+        if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+
+        // Pattern 6: ll=lat,lng or center=lat,lng or sll=lat,lng
+        m = decoded.match(/[?&](?:ll|center|sll)=(-?\d+\.\d+)[,\s+]+(-?\d+\.\d+)/);
+        if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+
+        // Pattern 7: Raw coordinates pasted (e.g. "27.5590, 68.2120")
+        m = decoded.trim().match(/^(-?\d{1,2}\.\d+)[,\s]+(-?\d{1,3}\.\d+)$/);
+        if (m) {
+            const lat = parseFloat(m[1]), lng = parseFloat(m[2]);
+            if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+                return { lat, lng };
+            }
+        }
+
+        // Pattern 8: @lat,lng (Camera/Viewport center fallback)
+        m = decoded.match(/@(-?\d+\.\d+)[,\s+]+(-?\d+\.\d+)/);
+        if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+
+        return null;
+    }
+
+    // ── Feature 2: Address geocoding search & Full Google Maps URL locator ──
+    const searchInput = document.getElementById('mapSearchInput');
+    const btnSearch = document.getElementById('btnSearchLoc');
+
+    function executeSearch() {
+        const query = (searchInput.value || '').trim();
+        if (!query) return;
+
+        // ── Raw coordinates or direct Google Maps URL extraction ──
+        const immediateCoords = tryExtractGoogleMapsCoords(query);
+        if (immediateCoords) {
+            marker.setLatLng([immediateCoords.lat, immediateCoords.lng]);
+            map.setView([immediateCoords.lat, immediateCoords.lng], 15);
+            updateCoords(immediateCoords.lat, immediateCoords.lng);
+            searchInput.value = '';
+            return;
+        }
+
+        // ── If user pasted a short link (goo.gl / maps.app.goo.gl) ──
+        if (/(?:goo\.gl|maps\.app\.goo\.gl|g\.co)/i.test(query)) {
+            customAlert({
+                title: 'Use Full Google Maps URL',
+                message: 'Shortened links (goo.gl / maps.app.goo.gl) do not contain GPS coordinates. Please open the link in your browser, copy the full URL from the address bar, and paste it here.',
+                type: 'info'
+            });
+            return;
+        }
+
+        btnSearch.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+        btnSearch.disabled = true;
+
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=pk&limit=1`)
+            .then(res => res.json())
+            .then(data => {
+                if (!data || data.length === 0) {
+                    return fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`).then(r => r.json());
+                }
+                return data;
+            })
+            .then(data => {
+                btnSearch.innerHTML = 'Find';
+                btnSearch.disabled = false;
+                if (data && data.length > 0) {
+                    const lat = parseFloat(data[0].lat);
+                    const lng = parseFloat(data[0].lon);
+                    marker.setLatLng([lat, lng]);
+                    map.setView([lat, lng], 15);
+                    updateCoords(lat, lng);
+                    marker.bindPopup(`<strong>${data[0].display_name}</strong>`).openPopup();
+                } else {
+                    customAlert({ title: 'Location Not Found', message: 'No location results found for "' + query + '". Please try another search term or drag the map pin manually.', type: 'warning' });
+                }
+            })
+            .catch(err => {
+                btnSearch.innerHTML = 'Find';
+                btnSearch.disabled = false;
+                customAlert({ title: 'Geocoding Service Error', message: 'Unable to reach the geocoding service. You can position your stall pin by clicking or dragging directly on the map.', type: 'danger' });
+            });
+    }
+
+    if (btnSearch && searchInput) {
+        btnSearch.addEventListener('click', executeSearch);
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                executeSearch();
+            }
+        });
+        // Auto-trigger on paste (for Google Maps URLs)
+        searchInput.addEventListener('paste', function(e) {
+            setTimeout(executeSearch, 100);
+        });
+    }
 });
 </script>
 

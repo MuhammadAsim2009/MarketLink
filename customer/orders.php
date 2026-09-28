@@ -136,7 +136,7 @@ $selected_order = null;
 $selected_order_items = [];
 if ($view_order_id > 0) {
     try {
-        $stmt = $pdo->prepare("SELECT o.*, u.name as farmer_name, u.phone as farmer_phone, fp.stall_name, fp.address as stall_address 
+        $stmt = $pdo->prepare("SELECT o.*, u.name as farmer_name, u.phone as farmer_phone, fp.stall_name, fp.address as stall_address, fp.latitude, fp.longitude 
                               FROM orders o 
                               JOIN users u ON o.farmer_id = u.user_id 
                               LEFT JOIN farmer_profiles fp ON u.user_id = fp.farmer_id 
@@ -438,7 +438,16 @@ require_once __DIR__ . '/../includes/header.php';
                             <div class="small border-top pt-2 mt-2">
                                 <div class="mb-1"><i class="bi bi-calendar-event text-primary me-1"></i> Pickup Date: <strong><?= format_date($selected_order['pickup_date']) ?></strong></div>
                                 <div class="mb-1"><i class="bi bi-clock text-primary me-1"></i> Time Window: <strong><?= e($selected_order['pickup_slot']) ?></strong></div>
-                                <div><i class="bi bi-telephone text-primary me-1"></i> Farmer Contact: <strong><?= e($selected_order['farmer_phone'] ?: '—') ?></strong></div>
+                                <div class="mb-2"><i class="bi bi-telephone text-primary me-1"></i> Farmer Contact: <strong><?= e($selected_order['farmer_phone'] ?: '—') ?></strong></div>
+                                <?php if (!empty($selected_order['latitude']) && !empty($selected_order['longitude'])): ?>
+                                    <a href="https://www.google.com/maps/dir/?api=1&destination=<?= urlencode($selected_order['latitude'] . ',' . $selected_order['longitude']) ?>" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary w-100 mt-1 d-flex align-items-center justify-content-center gap-1 fw-medium">
+                                        <i class="bi bi-pin-map-fill text-danger"></i> Get Directions to Pickup Point
+                                    </a>
+                                <?php elseif (!empty($selected_order['stall_address'])): ?>
+                                    <a href="https://www.google.com/maps/dir/?api=1&destination=<?= urlencode($selected_order['stall_address']) ?>" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary w-100 mt-1 d-flex align-items-center justify-content-center gap-1 fw-medium">
+                                        <i class="bi bi-pin-map-fill text-danger"></i> Get Directions to Pickup Address
+                                    </a>
+                                <?php endif; ?>
                             </div>
                         </div>
 
@@ -508,7 +517,7 @@ require_once __DIR__ . '/../includes/header.php';
 
                             <!-- Cancel Button (if status is placed or accepted) -->
                             <?php if (in_array($selected_order['status'], [ORDER_STATUS_PLACED, ORDER_STATUS_ACCEPTED])): ?>
-                                <form method="POST" action="<?= BASE_URL ?>customer/orders.php" onsubmit="return confirm('Are you sure you want to cancel this pre-order?');">
+                                <form method="POST" action="<?= BASE_URL ?>customer/orders.php" data-confirm="Are you sure you want to cancel pre-order #<?= $selected_order['order_id'] ?>? Any reserved fresh produce will be returned to the farmer's stall stock." data-confirm-title="Cancel Pre-Order" data-confirm-type="danger" data-confirm-btn="Yes, Cancel Order">
                                     <?= csrf_field() ?>
                                     <input type="hidden" name="action" value="cancel_order">
                                     <input type="hidden" name="order_id" value="<?= $selected_order['order_id'] ?>">

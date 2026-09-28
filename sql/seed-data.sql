@@ -32,7 +32,7 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- Farmers: Farmer@123
 -- Customers: Customer@123
 INSERT INTO `users` (`user_id`, `name`, `email`, `password_hash`, `phone`, `role`, `status`, `created_at`) VALUES
-(1, 'System Administrator', 'admin@marketlink.test', '$2y$10$mM7NxYiAmYIc5VeuRpdODOD1n8f3scmAvgVQwhGtPSdme7gvtiZxO', '03001234567', 'admin', 'active', NOW()),
+(1, 'System Administrator', 'admin@gmail.com', '$2y$10$mM7NxYiAmYIc5VeuRpdODOD1n8f3scmAvgVQwhGtPSdme7gvtiZxO', '03001234567', 'admin', 'active', NOW()),
 (2, 'Green Valley Organic Farm', 'greenvalley@marketlink.test', '$2y$10$87/M7Gz59igiyJZSOulsBuROkTzYdRxDlqugUPFW1qcp53E3sxuM.', '03112345678', 'farmer', 'active', NOW()),
 (3, 'Sunny Orchard & Berries', 'sunnyorchard@marketlink.test', '$2y$10$87/M7Gz59igiyJZSOulsBuROkTzYdRxDlqugUPFW1qcp53E3sxuM.', '03223456789', 'farmer', 'active', NOW()),
 (4, 'Happy Hen Dairy & Eggs', 'happyhen@marketlink.test', '$2y$10$87/M7Gz59igiyJZSOulsBuROkTzYdRxDlqugUPFW1qcp53E3sxuM.', '03334567890', 'farmer', 'active', NOW()),
@@ -42,16 +42,16 @@ INSERT INTO `users` (`user_id`, `name`, `email`, `password_hash`, `phone`, `role
 
 -- Farmer Profiles
 INSERT INTO `farmer_profiles` (`farmer_id`, `stall_name`, `address`, `latitude`, `longitude`, `operating_days`, `pickup_window_start`, `pickup_window_end`, `order_cutoff_hours`) VALUES
-(2, 'Green Valley Organics (Stall #12)', 'Plot 45, Agro Zone, North Valley', 31.52040000, 74.35870000, 'Sat,Sun', '08:00:00', '14:00:00', 2),
-(3, 'Sunny Orchards & Berry Farm (Stall #4)', 'Farmstead 12, Hilltop Ridge', 31.53000000, 74.37000000, 'Fri,Sat,Sun', '09:00:00', '15:00:00', 3),
-(4, 'Happy Hen Pastures (Stall #9)', 'Barn #3, Greenfield Meadow', 31.51500000, 74.34000000, 'Wed,Sat,Sun', '07:30:00', '13:30:00', 2),
-(5, 'Artisan Loaves & Pure Honey (Stall #18)', 'Cottage Rd, Old Mill District', 31.54500000, 74.32000000, 'Sat,Sun', '09:00:00', '16:00:00', 4);
+(2, 'Green Valley Organics (Stall #12)', 'Plot 45, Agro Zone, Larkana', 27.55900000, 68.21200000, 'Sat,Sun', '08:00:00', '14:00:00', 2),
+(3, 'Sunny Orchards & Berry Farm (Stall #4)', 'Farmstead 12, VIP Road, Larkana', 27.56800000, 68.22300000, 'Fri,Sat,Sun', '09:00:00', '15:00:00', 3),
+(4, 'Happy Hen Pastures (Stall #9)', 'Barn #3, Rice Canal Road, Larkana', 27.55200000, 68.20100000, 'Wed,Sat,Sun', '07:30:00', '13:30:00', 2),
+(5, 'Artisan Loaves & Pure Honey (Stall #18)', 'Station Road, Old District, Larkana', 27.57500000, 68.21800000, 'Sat,Sun', '09:00:00', '16:00:00', 4);
 
 -- Markets
 INSERT INTO `markets` (`market_id`, `market_name`, `address`, `latitude`, `longitude`, `operating_days`, `timings`) VALUES
-(1, 'Central Square Farmers Market', 'Heritage Park Plaza, Downtown', 31.52040000, 74.35870000, 'Sat,Sun', '07:00 AM - 02:00 PM'),
-(2, 'Riverside Organic Fair', 'Riverfront Promenade, West Bank', 31.53500000, 74.32500000, 'Fri,Sat', '08:00 AM - 03:00 PM'),
-(3, 'Meadowbrook Community Market', 'Meadowbrook Sports Complex Parking, East Suburbs', 31.50500000, 74.38500000, 'Sunday', '08:30 AM - 01:30 PM');
+(1, 'Central Square Farmers Market', 'Heritage Park Plaza, Larkana City', 27.55900000, 68.21200000, 'Sat,Sun', '07:00 AM - 02:00 PM'),
+(2, 'Riverside Organic Fair', 'Riverfront Promenade, Rice Canal, Larkana', 27.56500000, 68.22800000, 'Fri,Sat', '08:00 AM - 03:00 PM'),
+(3, 'Meadowbrook Community Market', 'Municipal Stadium Grounds, Larkana', 27.54800000, 68.19800000, 'Sunday', '08:30 AM - 01:30 PM');
 
 -- Market Farmers
 INSERT INTO `market_farmers` (`market_id`, `farmer_id`) VALUES

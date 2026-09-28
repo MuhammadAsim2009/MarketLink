@@ -649,7 +649,7 @@ require_once __DIR__ . '/includes/header.php';
                                                 </a>
 
                                                 <!-- Delete Button -->
-                                                <form method="POST" action="<?= BASE_URL ?>farmer/products.php" class="d-inline" onsubmit="return confirm('Are you sure you want to delete <?= e($p['name']) ?> from inventory?');">
+                                                <form method="POST" action="<?= BASE_URL ?>farmer/products.php" class="d-inline" data-confirm="Are you sure you want to delete <?= e($p['name']) ?> from your harvest inventory?" data-confirm-title="Delete Produce Item" data-confirm-type="danger" data-confirm-btn="Yes, Delete">
                                                     <?= csrf_field() ?>
                                                     <input type="hidden" name="form_action" value="delete_product">
                                                     <input type="hidden" name="product_id" value="<?= $p['product_id'] ?>">

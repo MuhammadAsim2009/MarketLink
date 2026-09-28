@@ -63,6 +63,8 @@ if (isset($pdo) && $admin_id) {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+    <!-- Leaflet JS (loaded early so page map scripts have access to L) -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <!-- MarketLink SaaS Design Tokens & Stylesheet -->
     <link rel="stylesheet" href="<?= ASSETS_URL ?>css/style.css?v=<?= time() ?>">
 
@@ -572,7 +574,7 @@ if (isset($pdo) && $admin_id) {
                             <div class="small fw-bold text-dark"><?= e($admin_name) ?></div>
                             <div class="text-muted" style="font-size: 0.72rem;"><?= e($_SESSION['email'] ?? 'Administrator') ?></div>
                         </li>
-                        <li><a class="dropdown-item small py-2" href="<?= BASE_URL ?>admin/dashboard.php"><i class="bi bi-speedometer2 me-2 text-muted"></i>Dashboard Hub</a></li>
+                        <li><a class="dropdown-item small py-2" href="<?= BASE_URL ?>admin/dashboard.php"><i class="bi bi-speedometer2 me-2 text-muted"></i>Dashboard</a></li>
                         <li><a class="dropdown-item small py-2" href="<?= BASE_URL ?>admin/manage-farmers.php"><i class="bi bi-shop me-2 text-muted"></i>Farmers & Stalls</a></li>
                         <li><a class="dropdown-item small py-2" href="<?= BASE_URL ?>admin/reports.php"><i class="bi bi-graph-up me-2 text-muted"></i>Analytics & Reports</a></li>
                         <li><hr class="dropdown-divider my-1"></li>

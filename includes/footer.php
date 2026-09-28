@@ -55,11 +55,11 @@
                 <p class="mb-3">
                     A digital community platform connecting local sustainable growers directly with neighborhood shoppers. Built with a zero-food-waste mission.
                 </p>
-                <a href="<?= BASE_URL ?>auth/admin-login.php"
+                <a href="<?= is_admin() ? BASE_URL . 'admin/dashboard.php' : BASE_URL . 'auth/login.php' ?>"
                    style="display:inline-flex;align-items:center;gap:6px;color:rgba(255,255,255,.55);font-size:.8rem;border:1px solid rgba(255,255,255,.12);padding:.35rem .75rem;border-radius:var(--radius-sm);transition:all var(--transition);"
                    onmouseover="this.style.color='#fff';this.style.borderColor='rgba(255,255,255,.35)';"
                    onmouseout="this.style.color='rgba(255,255,255,.55)';this.style.borderColor='rgba(255,255,255,.12)';">
-                    <i class="bi bi-lock-fill"></i> Admin Portal
+                    <i class="bi bi-shield-lock-fill"></i> Admin Portal
                 </a>
             </div>
         </div>
@@ -82,6 +82,6 @@
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <!-- Custom Vanilla JS -->
-<script src="<?= ASSETS_URL ?>js/main.js"></script>
+<script src="<?= ASSETS_URL ?>js/main.js?v=<?= time() ?>"></script>
 </body>
 </html>

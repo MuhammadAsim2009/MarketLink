@@ -319,7 +319,7 @@ require_once __DIR__ . '/includes/header.php';
                                         </button>
                                     </form>
 
-                                    <form method="POST" action="<?= BASE_URL ?>farmer/orders.php" class="flex-grow-1" onsubmit="return confirm('Decline this pre-order? Reserved stock will be restored to your inventory.');">
+                                    <form method="POST" action="<?= BASE_URL ?>farmer/orders.php" class="flex-grow-1" data-confirm="Decline pre-order #<?= $selected_order['order_id'] ?>? Reserved harvest produce will be automatically restored to your stock." data-confirm-title="Decline Pre-Order" data-confirm-type="danger" data-confirm-btn="Yes, Decline">
                                         <?= csrf_field() ?>
                                         <input type="hidden" name="order_id" value="<?= $selected_order['order_id'] ?>">
                                         <input type="hidden" name="new_status" value="<?= ORDER_STATUS_DECLINED ?>">
@@ -340,7 +340,7 @@ require_once __DIR__ . '/includes/header.php';
                                 </form>
 
                             <?php elseif ($selected_order['status'] === ORDER_STATUS_READY): ?>
-                                <form method="POST" action="<?= BASE_URL ?>farmer/orders.php" onsubmit="return confirm('Confirm that the customer has collected their basket and paid?');">
+                                <form method="POST" action="<?= BASE_URL ?>farmer/orders.php" data-confirm="Confirm that the customer has collected their basket and paid in person?" data-confirm-title="Complete Pre-Order" data-confirm-type="success" data-confirm-btn="Yes, Mark Completed">
                                     <?= csrf_field() ?>
                                     <input type="hidden" name="order_id" value="<?= $selected_order['order_id'] ?>">
                                     <input type="hidden" name="new_status" value="<?= ORDER_STATUS_COMPLETED ?>">

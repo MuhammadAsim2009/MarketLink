@@ -132,45 +132,63 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 
     <!-- Interactive Map View -->
-    <div class="card shadow-sm border-0 mb-4 overflow-hidden">
-        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-            <h5 class="card-title mb-0 fs-6"><i class="bi bi-map text-primary me-2"></i>Interactive OpenStreetMap Market Directory</h5>
-            <span class="badge bg-success-subtle text-success"><i class="bi bi-pin-map me-1"></i> <?= count($map_markers) ?> Markets Mapped</span>
+    <div class="card shadow-sm border-0 mb-4 overflow-hidden rounded-4">
+        <div class="card-header bg-white py-3 px-4 d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+                <h5 class="card-title mb-0 fs-6 fw-bold">
+                    <i class="bi bi-map-fill text-primary me-2"></i>Interactive OpenStreetMap Market Directory
+                </h5>
+                <small class="text-muted">Explore physical market plazas, pickup points, and turn-by-turn directions</small>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 shadow-xs" id="btnGeolocate" title="Detect your location to find nearby markets">
+                    <i class="bi bi-crosshair me-1"></i> Find Markets Near Me
+                </button>
+                <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill"><i class="bi bi-pin-map-fill me-1"></i> <?= count($map_markers) ?> Markets</span>
+            </div>
         </div>
-        <div class="card-body p-0">
-            <div id="marketsMap" style="height: 380px; width: 100%;"></div>
+        <div class="card-body p-0 position-relative">
+            <div id="marketsMap" style="height: 400px; width: 100%;"></div>
+            <div id="geoStatus" class="position-absolute bottom-0 start-0 m-3 px-3 py-1 bg-white border rounded-pill shadow-sm small text-muted d-none" style="z-index: 1000;"></div>
         </div>
     </div>
 
     <!-- Selected Market Detail or Markets Grid -->
     <?php if ($market_details): ?>
         <!-- Specific Market Farmers Showcase -->
-        <div class="card shadow-sm border-0 mb-4">
-            <div class="card-header bg-primary text-white py-3 d-flex justify-content-between align-items-center">
+        <div class="card shadow-sm border-0 mb-4 rounded-4 overflow-hidden">
+            <div class="card-header bg-primary text-white py-3 px-4 d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <div>
-                    <h5 class="card-title mb-0 fs-6"><i class="bi bi-shop me-2"></i><?= e($market_details['market_name']) ?> — Attending Stalls</h5>
+                    <h5 class="card-title mb-0 fs-6 fw-bold"><i class="bi bi-shop me-2"></i><?= e($market_details['market_name']) ?> — Attending Stalls</h5>
                     <small class="text-white-50"><i class="bi bi-geo-alt me-1"></i><?= e($market_details['address']) ?> &bull; <?= e($market_details['operating_days']) ?> (<?= e($market_details['timings']) ?>)</small>
                 </div>
-                <a href="<?= BASE_URL ?>customer/browse-markets.php" class="btn btn-light btn-sm">
-                    <i class="bi bi-x-lg me-1"></i> View All Markets
-                </a>
+                <div class="d-flex gap-2">
+                    <?php if (!empty($market_details['latitude']) && !empty($market_details['longitude'])): ?>
+                        <a href="https://www.google.com/maps/dir/?api=1&destination=<?= (float)$market_details['latitude'] ?>,<?= (float)$market_details['longitude'] ?>" target="_blank" class="btn btn-light btn-sm rounded-3">
+                            <i class="bi bi-sign-turn-right-fill text-primary me-1"></i> Get Directions
+                        </a>
+                    <?php endif; ?>
+                    <a href="<?= BASE_URL ?>customer/browse-markets.php" class="btn btn-outline-light btn-sm rounded-3">
+                        <i class="bi bi-x-lg me-1"></i> All Markets
+                    </a>
+                </div>
             </div>
             <div class="card-body p-4">
                 <?php if (!empty($attending_farmers)): ?>
                     <div class="row g-3">
                         <?php foreach ($attending_farmers as $f): ?>
                             <div class="col-md-6 col-lg-4">
-                                <div class="card h-100 border p-3 card-hover bg-white">
+                                <div class="card h-100 border p-3 card-hover bg-white rounded-4 shadow-xs">
                                     <div class="d-flex align-items-start gap-3 mb-2">
-                                        <div class="p-3 rounded-circle bg-primary-subtle text-primary fs-4">
+                                        <div class="p-3 rounded-circle bg-primary-subtle text-primary fs-4 flex-shrink-0">
                                             <i class="bi bi-shop"></i>
                                         </div>
-                                        <div>
-                                            <h6 class="fw-bold mb-1"><?= e($f['stall_name'] ?: $f['name']) ?></h6>
-                                            <div class="small text-muted mb-1"><i class="bi bi-person me-1"></i><?= e($f['name']) ?></div>
+                                        <div style="min-width: 0; flex: 1;">
+                                            <h6 class="fw-bold mb-1 text-truncate"><?= e($f['stall_name'] ?: $f['name']) ?></h6>
+                                            <div class="small text-muted mb-1 text-truncate"><i class="bi bi-person me-1"></i><?= e($f['name']) ?></div>
                                             <div class="text-warning small">
                                                 <i class="bi bi-star-fill"></i> <?= number_format($f['avg_rating'], 1) ?>
-                                                <span class="text-muted ms-1">(<?= $f['product_count'] ?> products live)</span>
+                                                <span class="text-muted ms-1">(<?= $f['product_count'] ?> live produce)</span>
                                             </div>
                                         </div>
                                     </div>
@@ -179,10 +197,10 @@ require_once __DIR__ . '/../includes/header.php';
                                         <div><i class="bi bi-clock text-primary me-1"></i> Pickup: <strong><?= e($f['pickup_window_start'] ?? '08:00') ?> - <?= e($f['pickup_window_end'] ?? '14:00') ?></strong></div>
                                     </div>
                                     <div class="mt-auto d-flex gap-2">
-                                        <a href="<?= BASE_URL ?>customer/farmer-detail.php?farmer_id=<?= $f['user_id'] ?>" class="btn btn-outline-primary btn-sm flex-grow-1">
+                                        <a href="<?= BASE_URL ?>customer/farmer-detail.php?farmer_id=<?= $f['user_id'] ?>" class="btn btn-outline-primary btn-sm flex-grow-1 rounded-3">
                                             <i class="bi bi-shop me-1"></i> Stall Profile
                                         </a>
-                                        <a href="<?= BASE_URL ?>customer/browse-products.php?farmer_id=<?= $f['user_id'] ?>" class="btn btn-primary btn-sm flex-grow-1">
+                                        <a href="<?= BASE_URL ?>customer/browse-products.php?farmer_id=<?= $f['user_id'] ?>" class="btn btn-primary btn-sm flex-grow-1 rounded-3">
                                             <i class="bi bi-basket me-1"></i> View Stock
                                         </a>
                                     </div>
@@ -204,12 +222,17 @@ require_once __DIR__ . '/../includes/header.php';
     <!-- Markets Directory Grid -->
     <div class="row g-4">
         <div class="col-12">
-            <h5 class="fw-bold mb-3"><i class="bi bi-grid-fill text-primary me-2"></i>All Registered Markets (<?= count($markets) ?>)</h5>
+            <h5 class="fw-bold mb-1"><i class="bi bi-grid-fill text-primary me-2"></i>All Registered Markets (<?= count($markets) ?>)</h5>
+            <p class="small text-muted mb-0">Browse details and navigate directly to your local farmers market</p>
         </div>
         <?php if (!empty($markets)): ?>
-            <?php foreach ($markets as $m): ?>
+            <?php foreach ($markets as $m): 
+                $has_coords = (!empty($m['latitude']) && !empty($m['longitude']));
+                $m_lat = (float)($m['latitude'] ?? 27.5590);
+                $m_lng = (float)($m['longitude'] ?? 68.2120);
+            ?>
                 <div class="col-md-6 col-lg-4">
-                    <div class="card h-100 shadow-sm border-0 card-hover bg-white overflow-hidden">
+                    <div class="card h-100 shadow-sm border-0 card-hover bg-white rounded-4 overflow-hidden">
                         <div class="card-body p-4 d-flex flex-column">
                             <div class="d-flex justify-content-between align-items-start mb-2">
                                 <span class="badge bg-primary-subtle text-primary fw-semibold px-2 py-1">
@@ -223,16 +246,21 @@ require_once __DIR__ . '/../includes/header.php';
                             <p class="small text-muted mb-3 flex-grow-1">
                                 <i class="bi bi-geo-alt-fill text-danger me-1"></i> <?= e($m['address']) ?>
                             </p>
-                            <div class="p-2 bg-light rounded small text-muted mb-3">
+                            <div class="p-2 bg-light rounded-3 small text-muted mb-3">
                                 <i class="bi bi-clock me-1 text-primary"></i> <strong>Timings:</strong> <?= e($m['timings']) ?>
                             </div>
                             <div class="d-flex gap-2">
-                                <a href="<?= BASE_URL ?>customer/browse-markets.php?market_id=<?= $m['market_id'] ?>" class="btn btn-primary btn-sm flex-grow-1">
-                                    <i class="bi bi-shop me-1"></i> View Attending Farmers
+                                <a href="<?= BASE_URL ?>customer/browse-markets.php?market_id=<?= $m['market_id'] ?>" class="btn btn-primary btn-sm flex-grow-1 rounded-3">
+                                    <i class="bi bi-shop me-1"></i> Attending Farmers
                                 </a>
-                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="focusMap(<?= $m['latitude'] ?? 31.5204 ?>, <?= $m['longitude'] ?? 74.3587 ?>, '<?= e(addslashes($m['market_name'])) ?>')">
+                                <button type="button" class="btn btn-outline-secondary btn-sm rounded-3" title="View on Map" onclick="focusMap(<?= $m_lat ?>, <?= $m_lng ?>, '<?= e(addslashes($m['market_name'])) ?>')">
                                     <i class="bi bi-pin-map"></i>
                                 </button>
+                                <?php if ($has_coords): ?>
+                                    <a href="https://www.google.com/maps/dir/?api=1&destination=<?= $m_lat ?>,<?= $m_lng ?>" target="_blank" class="btn btn-outline-success btn-sm rounded-3" title="Get Directions in Maps">
+                                        <i class="bi bi-sign-turn-right-fill"></i>
+                                    </a>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -251,34 +279,55 @@ require_once __DIR__ . '/../includes/header.php';
 <!-- Leaflet Map Setup -->
 <script>
 let map;
+let userMarker = null;
 const markersData = <?= json_encode($map_markers) ?>;
 
 document.addEventListener('DOMContentLoaded', function () {
-    const defaultCenter = [31.5204, 74.3587];
+    const defaultCenter = [27.5590, 68.2120];
     map = L.map('marketsMap').setView(defaultCenter, 12);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
 
+    // Custom Market Leaflet Icon
+    const marketIcon = L.divIcon({
+        className: 'custom-market-pin',
+        html: `<div style="background-color:#2E7D4F; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; border:2px solid #fff; box-shadow:0 3px 8px rgba(0,0,0,0.3); font-size:16px;">
+                 <i class="bi bi-shop"></i>
+               </div>`,
+        iconSize: [34, 34],
+        iconAnchor: [17, 17],
+        popupAnchor: [0, -18]
+    });
+
     const bounds = [];
 
     markersData.forEach(function (item) {
-        const marker = L.marker([item.lat, item.lng]).addTo(map);
+        const marker = L.marker([item.lat, item.lng], { icon: marketIcon }).addTo(map);
         bounds.push([item.lat, item.lng]);
 
+        const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}`;
+
         const popupContent = `
-            <div style="font-family:'Inter',sans-serif; min-width:180px;">
-                <h6 style="margin-bottom:4px; font-weight:700; color:#3D8B47;">${item.title}</h6>
-                <p style="font-size:12px; margin-bottom:6px; color:#6E6A62;">${item.address}</p>
-                <div style="font-size:11px; margin-bottom:8px;">
-                    <strong>Days:</strong> ${item.days}<br>
-                    <strong>Hours:</strong> ${item.timings}<br>
-                    <strong>Farmers:</strong> ${item.farmers} active stalls
+            <div style="font-family:'Inter',sans-serif; min-width:210px; padding:2px;">
+                <h6 style="margin-bottom:4px; font-weight:700; color:#2E7D4F; font-size:14px;">${item.title}</h6>
+                <p style="font-size:12px; margin-bottom:6px; color:#64748B; line-height:1.4;">
+                    <i class="bi bi-geo-alt-fill text-danger me-1"></i>${item.address}
+                </p>
+                <div style="font-size:11px; margin-bottom:10px; background:#F8FAFC; padding:6px 8px; border-radius:6px; border:1px solid #E2E8F0;">
+                    <div><strong>Days:</strong> ${item.days}</div>
+                    <div><strong>Hours:</strong> ${item.timings}</div>
+                    <div><strong>Stalls:</strong> ${item.farmers} active growers</div>
                 </div>
-                <a href="${item.url}" class="btn btn-sm btn-primary" style="font-size:11px; padding:3px 8px; color:#fff; text-decoration:none; display:inline-block; border-radius:4px;">
-                    Explore Stalls
-                </a>
+                <div style="display:flex; gap:6px;">
+                    <a href="${item.url}" class="btn btn-sm btn-primary" style="font-size:11px; padding:4px 10px; color:#fff; text-decoration:none; border-radius:6px; flex:1; text-align:center; font-weight:600;">
+                        <i class="bi bi-shop me-1"></i> Stalls
+                    </a>
+                    <a href="${directionsUrl}" target="_blank" class="btn btn-sm btn-outline-success" style="font-size:11px; padding:4px 10px; text-decoration:none; border-radius:6px; font-weight:600;">
+                        <i class="bi bi-sign-turn-right-fill me-1"></i> Directions
+                    </a>
+                </div>
             </div>
         `;
         marker.bindPopup(popupContent);
@@ -287,12 +336,67 @@ document.addEventListener('DOMContentLoaded', function () {
     if (bounds.length > 0) {
         map.fitBounds(bounds, { padding: [40, 40] });
     }
+
+    // Geolocation "Near Me" Button Handler
+    const btnGeo = document.getElementById('btnGeolocate');
+    const geoStatus = document.getElementById('geoStatus');
+
+    if (btnGeo) {
+        btnGeo.addEventListener('click', function() {
+            if (!navigator.geolocation) {
+                customAlert({ title: 'GPS Not Supported', message: 'Geolocation is not supported by your browser.', type: 'warning' });
+                return;
+            }
+
+            btnGeo.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Locating...';
+            btnGeo.disabled = true;
+
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    const userLat = position.coords.latitude;
+                    const userLng = position.coords.longitude;
+
+                    btnGeo.innerHTML = '<i class="bi bi-check2-circle text-success me-1"></i> Location Found';
+                    btnGeo.disabled = false;
+
+                    if (userMarker) {
+                        map.removeLayer(userMarker);
+                    }
+
+                    const userIcon = L.divIcon({
+                        className: 'user-location-pin',
+                        html: `<div style="background-color:#0284C7; width:20px; height:20px; border-radius:50%; border:3px solid #fff; box-shadow:0 0 0 5px rgba(2,132,199,0.35);"></div>`,
+                        iconSize: [20, 20],
+                        iconAnchor: [10, 10]
+                    });
+
+                    userMarker = L.marker([userLat, userLng], { icon: userIcon }).addTo(map)
+                        .bindPopup('<strong>📍 You Are Here</strong><br>Showing markets near your current location.')
+                        .openPopup();
+
+                    map.setView([userLat, userLng], 13);
+
+                    if (geoStatus) {
+                        geoStatus.innerHTML = '<i class="bi bi-geo-alt-fill text-primary me-1"></i> Showing markets closest to your GPS location';
+                        geoStatus.classList.remove('d-none');
+                        setTimeout(() => geoStatus.classList.add('d-none'), 6000);
+                    }
+                },
+                function(error) {
+                    btnGeo.innerHTML = '<i class="bi bi-crosshair me-1"></i> Find Markets Near Me';
+                    btnGeo.disabled = false;
+                    customAlert({ title: 'Location Access Error', message: 'Unable to retrieve your current location: ' + (error.message || 'Permission denied'), type: 'danger' });
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+            );
+        });
+    }
 });
 
 function focusMap(lat, lng, name) {
     if (map && lat && lng) {
         map.setView([lat, lng], 15);
-        window.scrollTo({ top: document.getElementById('marketsMap').offsetTop - 100, behavior: 'smooth' });
+        window.scrollTo({ top: document.getElementById('marketsMap').offsetTop - 90, behavior: 'smooth' });
     }
 }
 </script>

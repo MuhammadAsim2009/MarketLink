@@ -103,18 +103,23 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
                 </div>
 
-                <div class="col-md-4 text-md-end">
+                <div class="col-md-4 text-md-end d-flex flex-wrap justify-content-md-end gap-2 align-items-center">
+                    <?php if (!empty($farmer['latitude']) && !empty($farmer['longitude'])): ?>
+                        <a href="https://www.google.com/maps/dir/?api=1&destination=<?= (float)$farmer['latitude'] ?>,<?= (float)$farmer['longitude'] ?>" target="_blank" class="btn btn-outline-success btn-sm rounded-3 px-3">
+                            <i class="bi bi-sign-turn-right-fill me-1"></i> Get Directions
+                        </a>
+                    <?php endif; ?>
                     <?php if (is_logged_in() && get_logged_in_user_role() === ROLE_CUSTOMER): ?>
                         <form method="POST" action="<?= BASE_URL ?>customer/favorites.php" class="d-inline">
                             <?= csrf_field() ?>
                             <input type="hidden" name="farmer_id" value="<?= $farmer['user_id'] ?>">
                             <input type="hidden" name="action" value="<?= $is_favorited ? 'remove' : 'add' ?>">
-                            <button type="submit" class="btn <?= $is_favorited ? 'btn-danger' : 'btn-outline-danger' ?> btn-sm px-3">
-                                <i class="bi <?= $is_favorited ? 'bi-heart-fill' : 'bi-heart' ?> me-1"></i> <?= $is_favorited ? 'Saved to Favorites' : 'Save Favorite Stall' ?>
+                            <button type="submit" class="btn <?= $is_favorited ? 'btn-danger' : 'btn-outline-danger' ?> btn-sm px-3 rounded-3">
+                                <i class="bi <?= $is_favorited ? 'bi-heart-fill' : 'bi-heart' ?> me-1"></i> <?= $is_favorited ? 'Saved' : 'Favorite' ?>
                             </button>
                         </form>
                     <?php endif; ?>
-                    <a href="#produce-section" class="btn btn-primary btn-sm px-3 ms-2">
+                    <a href="#produce-section" class="btn btn-primary btn-sm px-3 rounded-3">
                         <i class="bi bi-basket me-1"></i> View Harvest
                     </a>
                 </div>
@@ -124,7 +129,7 @@ require_once __DIR__ . '/../includes/header.php';
 
     <!-- Attending Markets List -->
     <?php if (!empty($attending_markets)): ?>
-        <div class="alert alert-light border shadow-sm mb-4 d-flex align-items-center gap-3">
+        <div class="alert alert-light border shadow-sm mb-4 d-flex align-items-center gap-3 rounded-4">
             <i class="bi bi-geo-fill fs-3 text-primary"></i>
             <div>
                 <strong>Find this stall at the following weekend markets:</strong>
@@ -191,14 +196,22 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="row g-4">
         <!-- Location Map -->
         <div class="col-lg-6">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-white py-3">
-                    <h5 class="card-title mb-0 fs-6"><i class="bi bi-pin-map text-accent me-2"></i>Stall & Farm Coordinates</h5>
+            <div class="card shadow-sm border-0 h-100 rounded-4 overflow-hidden">
+                <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0 fs-6 fw-bold"><i class="bi bi-pin-map-fill text-primary me-2"></i>Stall & Farm Coordinates</h5>
+                    <?php if (!empty($farmer['latitude']) && !empty($farmer['longitude'])): ?>
+                        <a href="https://www.google.com/maps/dir/?api=1&destination=<?= (float)$farmer['latitude'] ?>,<?= (float)$farmer['longitude'] ?>" target="_blank" class="btn btn-outline-success btn-sm rounded-3">
+                            <i class="bi bi-sign-turn-right-fill me-1"></i> Get Directions
+                        </a>
+                    <?php endif; ?>
                 </div>
                 <div class="card-body p-3">
                     <div id="stallDetailMap" style="height: 280px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);"></div>
-                    <div class="small text-muted mt-2">
-                        <i class="bi bi-geo-alt me-1"></i> <?= e($farmer['address'] ?: 'Location on map') ?>
+                    <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
+                        <div class="small text-muted">
+                            <i class="bi bi-geo-alt-fill text-danger me-1"></i> <?= e($farmer['address'] ?: 'Market Stall Location') ?>
+                        </div>
+                        <span class="badge bg-light text-secondary border">GPS: <?= number_format((float)($farmer['latitude'] ?: 27.5590), 4) ?>, <?= number_format((float)($farmer['longitude'] ?: 68.2120), 4) ?></span>
                     </div>
                 </div>
             </div>
@@ -206,9 +219,9 @@ require_once __DIR__ . '/../includes/header.php';
 
         <!-- Reviews List -->
         <div class="col-lg-6">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-white py-3">
-                    <h5 class="card-title mb-0 fs-6"><i class="bi bi-chat-heart text-primary me-2"></i>Customer Reviews (<?= count($reviews) ?>)</h5>
+            <div class="card shadow-sm border-0 h-100 rounded-4 overflow-hidden">
+                <div class="card-header bg-white py-3 px-4">
+                    <h5 class="card-title mb-0 fs-6 fw-bold"><i class="bi bi-chat-heart-fill text-primary me-2"></i>Customer Reviews (<?= count($reviews) ?>)</h5>
                 </div>
                 <div class="card-body p-0">
                     <?php if (!empty($reviews)): ?>
@@ -248,16 +261,38 @@ require_once __DIR__ . '/../includes/header.php';
 <!-- Leaflet Stall Map Script -->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const lat = <?= (float)($farmer['latitude'] ?: 31.5204) ?>;
-    const lng = <?= (float)($farmer['longitude'] ?: 74.3587) ?>;
+    const lat = <?= (float)($farmer['latitude'] ?: 27.5590) ?>;
+    const lng = <?= (float)($farmer['longitude'] ?: 68.2120) ?>;
 
     const map = L.map('stallDetailMap').setView([lat, lng], 14);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
 
-    L.marker([lat, lng]).addTo(map)
-        .bindPopup('<strong><?= e(addslashes($farmer['stall_name'] ?: $farmer['contact_name'])) ?></strong><br><?= e(addslashes($farmer['address'] ?: 'Stall Location')) ?>')
+    const stallIcon = L.divIcon({
+        className: 'custom-stall-pin',
+        html: `<div style="background-color:#2E7D4F; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; border:2px solid #fff; box-shadow:0 3px 8px rgba(0,0,0,0.3); font-size:17px;">
+                 <i class="bi bi-shop"></i>
+               </div>`,
+        iconSize: [36, 36],
+        iconAnchor: [18, 18],
+        popupAnchor: [0, -18]
+    });
+
+    const dirUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+
+    const popupHtml = `
+        <div style="font-family:'Inter',sans-serif; min-width:180px; padding:2px;">
+            <strong style="color:#2E7D4F; font-size:13px; display:block; margin-bottom:2px;"><?= e(addslashes($farmer['stall_name'] ?: $farmer['contact_name'])) ?></strong>
+            <small style="color:#64748B; display:block; margin-bottom:8px; line-height:1.3;"><?= e(addslashes($farmer['address'] ?: 'Market Stall Location')) ?></small>
+            <a href="${dirUrl}" target="_blank" class="btn btn-sm btn-primary" style="font-size:11px; padding:4px 8px; color:#fff; text-decoration:none; display:inline-block; border-radius:4px; width:100%; text-align:center; font-weight:600;">
+                <i class="bi bi-sign-turn-right-fill me-1"></i> Get Directions
+            </a>
+        </div>
+    `;
+
+    L.marker([lat, lng], { icon: stallIcon }).addTo(map)
+        .bindPopup(popupHtml)
         .openPopup();
 });
 </script>

@@ -98,6 +98,26 @@ a:hover { color: var(--primary-mid); }
 
 p { color: var(--text-2); }
 
+/* ── Leaflet Map Compatibility ───────────────────────────── */
+/* Bootstrap 5 sets img { max-width: 100% } globally which breaks
+   Leaflet tile images (they need to overflow their container).
+   These rules restore correct tile rendering. */
+.leaflet-container img {
+    max-width: none !important;
+    max-height: none !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+.leaflet-container {
+    font-family: var(--font-sans);
+    font-size: 13px;
+}
+/* Fix popup appearing behind Bootstrap dropdowns/modals */
+.leaflet-popup-pane { z-index: 700; }
+.leaflet-popup { z-index: 800; }
+.leaflet-top,
+.leaflet-bottom { z-index: 1000; }
+
 /* ── Layout Utility ──────────────────────────────────────── */
 .main-content { flex: 1; padding-top: calc(var(--navbar-h) + 1px); }
 
@@ -1919,5 +1939,387 @@ footer.ml-footer p { color: rgba(255,255,255,.5); font-size: .875rem; }
         padding: 1.25rem 1rem;
     }
 }
+
+/* ============================================================
+   Custom Popup Modal System (Alerts & Confirmations)
+   ============================================================ */
+.ml-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.22s;
+}
+
+.ml-modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.ml-modal-dialog {
+    background: #FFFFFF;
+    border-radius: var(--radius-lg, 16px);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 440px;
+    padding: 1.75rem;
+    position: relative;
+    transform: scale(0.92) translateY(12px);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s;
+    opacity: 0;
+    text-align: center;
+    overflow: hidden;
+}
+
+.ml-modal-overlay.active .ml-modal-dialog {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+}
+
+.ml-modal-icon-wrapper {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.25rem;
+    font-size: 1.85rem;
+    position: relative;
+    box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.12);
+}
+
+.ml-modal-icon-wrapper.danger {
+    background: linear-gradient(135deg, #FEE2E2, #FECACA);
+    color: #DC2626;
+    border: 2px solid #FCA5A5;
+}
+
+.ml-modal-icon-wrapper.warning {
+    background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+    color: #D97706;
+    border: 2px solid #FCD34D;
+}
+
+.ml-modal-icon-wrapper.success {
+    background: linear-gradient(135deg, #D1FAE5, #A7F3D0);
+    color: #059669;
+    border: 2px solid #6EE7B7;
+}
+
+.ml-modal-icon-wrapper.info,
+.ml-modal-icon-wrapper.primary {
+    background: linear-gradient(135deg, #E0F2FE, #BAE6FD);
+    color: #0284C7;
+    border: 2px solid #7DD3FC;
+}
+
+.ml-modal-title {
+    font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text, #101828);
+    margin-bottom: 0.5rem;
+    line-height: 1.35;
+}
+
+.ml-modal-message {
+    color: var(--text-3, #64748b);
+    font-size: 0.935rem;
+    line-height: 1.55;
+    margin-bottom: 1.75rem;
+    word-break: break-word;
+}
+
+.ml-modal-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.ml-modal-btn {
+    flex: 1;
+    padding: 0.65rem 1.25rem;
+    font-size: 0.925rem;
+    font-weight: 600;
+    border-radius: var(--radius-sm, 8px);
+    transition: all var(--transition, 0.2s);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    border: 1px solid transparent;
+}
+
+.ml-modal-btn-cancel {
+    background: #F8FAFC;
+    border-color: #E2E8F0;
+    color: #475569;
+}
+
+.ml-modal-btn-cancel:hover {
+    background: #F1F5F9;
+    border-color: #CBD5E1;
+    color: #1E293B;
+}
+
+.ml-modal-btn-confirm.danger {
+    background: #DC2626;
+    color: #FFFFFF;
+    box-shadow: 0 4px 10px rgba(220, 38, 38, 0.25);
+}
+
+.ml-modal-btn-confirm.danger:hover {
+    background: #B91C1C;
+    box-shadow: 0 6px 14px rgba(220, 38, 38, 0.35);
+}
+
+.ml-modal-btn-confirm.warning {
+    background: #D97706;
+    color: #FFFFFF;
+    box-shadow: 0 4px 10px rgba(217, 119, 6, 0.25);
+}
+
+.ml-modal-btn-confirm.warning:hover {
+    background: #B45309;
+    box-shadow: 0 6px 14px rgba(217, 119, 6, 0.35);
+}
+
+.ml-modal-btn-confirm.success {
+    background: #059669;
+    color: #FFFFFF;
+    box-shadow: 0 4px 10px rgba(5, 150, 105, 0.25);
+}
+
+.ml-modal-btn-confirm.success:hover {
+    background: #047857;
+    box-shadow: 0 6px 14px rgba(5, 150, 105, 0.35);
+}
+
+.ml-modal-btn-confirm.info,
+.ml-modal-btn-confirm.primary {
+    background: var(--primary, #2E7D4F);
+    color: #FFFFFF;
+    box-shadow: 0 4px 10px rgba(46, 125, 79, 0.25);
+}
+
+.ml-modal-btn-confirm.info:hover,
+.ml-modal-btn-confirm.primary:hover {
+    background: var(--primary-mid, #3A9B62);
+    box-shadow: 0 6px 14px rgba(46, 125, 79, 0.35);
+}
+
+.ml-modal-close-x {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    color: #94A3B8;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 0.85rem;
+}
+
+.ml-modal-close-x:hover {
+    background: #F1F5F9;
+    color: #334155;
+}
+
+/* ============================================================
+   Unified Input Groups & Seamless Password Visibility Toggle
+   ============================================================ */
+.input-group {
+    border-radius: var(--radius-sm);
+    transition: box-shadow 0.15s ease-in-out;
+}
+
+.input-group:focus-within {
+    box-shadow: 0 0 0 3px var(--primary-glow) !important;
+}
+
+.input-group .input-group-text {
+    background-color: var(--surface, #ffffff) !important;
+    border-color: var(--border, #E4E7EC) !important;
+    color: var(--text-3, #667085) !important;
+    transition: border-color 0.15s ease;
+}
+
+.input-group .form-control {
+    background-color: var(--surface, #ffffff);
+    border-color: var(--border, #E4E7EC);
+    color: var(--text, #101828);
+    transition: border-color 0.15s ease;
+}
+
+.input-group .form-control:focus {
+    border-color: var(--primary, #2E7D4F) !important;
+    box-shadow: none !important;
+    z-index: 2;
+}
+
+.input-group:focus-within .input-group-text,
+.input-group:focus-within .form-control,
+.input-group:focus-within .btn-toggle-password,
+.input-group:focus-within [data-toggle-password] {
+    border-color: var(--primary, #2E7D4F) !important;
+}
+
+.input-group .btn-toggle-password,
+.input-group [data-toggle-password] {
+    background-color: var(--surface, #ffffff) !important;
+    border: 1px solid var(--border, #E4E7EC) !important;
+    border-left: 0 !important;
+    color: var(--text-3, #667085) !important;
+    padding-left: 0.8rem;
+    padding-right: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    outline: none !important;
+    box-shadow: none !important;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+    z-index: 3;
+}
+
+.input-group .btn-toggle-password:hover,
+.input-group [data-toggle-password]:hover {
+    color: var(--text, #101828) !important;
+    background-color: var(--surface, #ffffff) !important;
+    border-color: var(--border, #E4E7EC) !important;
+}
+
+.input-group:focus-within .btn-toggle-password:hover,
+.input-group:focus-within [data-toggle-password]:hover {
+    border-color: var(--primary, #2E7D4F) !important;
+}
+
+.input-group .btn-toggle-password:focus,
+.input-group .btn-toggle-password:active,
+.input-group [data-toggle-password]:focus,
+.input-group [data-toggle-password]:active {
+    outline: none !important;
+    box-shadow: none !important;
+    color: var(--primary, #2E7D4F) !important;
+    background-color: var(--surface, #ffffff) !important;
+}
+
+.input-group .btn-toggle-password i,
+.input-group [data-toggle-password] i {
+    font-size: 1rem;
+    line-height: 1;
+    pointer-events: none;
+}
+
+/* ============================================================
+   Dashboard Quick Action & Shortcut Items (SaaS Polish)
+   ============================================================ */
+.admin-shortcut-item,
+.quick-action-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--border, #E4E7EC);
+    border-radius: var(--radius-md, 12px);
+    background-color: var(--surface, #FFFFFF);
+    color: var(--text, #101828);
+    text-decoration: none !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.admin-shortcut-item:hover,
+.quick-action-link:hover {
+    background-color: #F8FAF9;
+    border-color: var(--primary, #2E7D4F);
+    color: var(--text, #101828);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(46, 125, 79, 0.08);
+}
+
+.admin-shortcut-item .shortcut-icon-box,
+.quick-action-link .action-icon-box {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.admin-shortcut-item .shortcut-title,
+.quick-action-link .action-title {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--text, #101828);
+    transition: color 0.15s ease;
+    line-height: 1.25;
+}
+
+.admin-shortcut-item:hover .shortcut-title,
+.quick-action-link:hover .action-title {
+    color: var(--primary, #2E7D4F);
+}
+
+.admin-shortcut-item .shortcut-desc,
+.quick-action-link .action-desc {
+    font-size: 0.75rem;
+    color: var(--text-3, #667085);
+    line-height: 1.3;
+    margin-top: 2px;
+}
+
+.admin-shortcut-item .shortcut-arrow,
+.quick-action-link .action-arrow {
+    font-size: 0.85rem;
+    color: var(--text-4, #98A2B3);
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.admin-shortcut-item:hover .shortcut-arrow,
+.quick-action-link:hover .action-arrow {
+    color: var(--primary, #2E7D4F);
+    transform: translateX(4px);
+}
+
+.btn-white {
+    background-color: #FFFFFF;
+    color: var(--text, #101828);
+    border-color: var(--border, #E4E7EC);
+    transition: all 0.2s ease;
+}
+
+.btn-white:hover,
+.btn-white:focus {
+    background-color: #F8FAF9;
+    color: var(--primary, #2E7D4F);
+    border-color: var(--primary, #2E7D4F);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
 
 

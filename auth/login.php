@@ -177,7 +177,7 @@ require_once __DIR__ . '/../includes/header.php';
                         <div class="mb-3">
                             <label class="form-label small fw-semibold" for="email">Email Address</label>
                             <div class="input-group">
-                                <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-envelope"></i></span>
+                                <span class="input-group-text border-end-0"><i class="bi bi-envelope"></i></span>
                                 <input type="email" class="form-control border-start-0" id="email" name="email" value="<?= e($email_val) ?>" required placeholder="name@example.com" autofocus>
                             </div>
                         </div>
@@ -188,9 +188,9 @@ require_once __DIR__ . '/../includes/header.php';
                                 <a href="<?= BASE_URL ?>auth/forgot-password.php" class="small text-muted text-decoration-underline">Forgot password?</a>
                             </div>
                             <div class="input-group">
-                                <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-lock"></i></span>
+                                <span class="input-group-text border-end-0"><i class="bi bi-lock"></i></span>
                                 <input type="password" class="form-control border-start-0 border-end-0" id="password" name="password" required placeholder="Enter your account password">
-                                <button class="btn btn-outline-secondary border-start-0 bg-light text-muted px-3" type="button" data-toggle-password="password" title="Show password" style="border-color: var(--border);">
+                                <button class="btn btn-toggle-password" type="button" data-toggle-password="password" onclick="togglePasswordVisibility('password', this)" title="Show password" aria-label="Toggle password visibility">
                                     <i class="bi bi-eye"></i>
                                 </button>
                             </div>

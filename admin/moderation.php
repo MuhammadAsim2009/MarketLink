@@ -235,7 +235,7 @@ require_once __DIR__ . '/includes/header.php';
                                     <small class="text-muted text-nowrap"><?= format_date($r['created_at']) ?></small>
                                 </td>
                                 <td class="text-end">
-                                    <form method="POST" action="<?= BASE_URL ?>admin/moderation.php" class="d-inline" onsubmit="return confirm('Permanently remove this review from the public platform?');">
+                                    <form method="POST" action="<?= BASE_URL ?>admin/moderation.php" class="d-inline" data-confirm="Permanently remove this customer review from the public platform?" data-confirm-title="Remove Review" data-confirm-type="danger" data-confirm-btn="Yes, Remove">
                                         <?= csrf_field() ?>
                                         <input type="hidden" name="action" value="delete_review">
                                         <input type="hidden" name="review_id" value="<?= $r['review_id'] ?>">

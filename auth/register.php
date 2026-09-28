@@ -18,6 +18,7 @@ $form_data = [
     'name' => '',
     'email' => '',
     'phone' => '',
+    'market_id' => 0,
     'stall_name' => '',
     'address' => '',
     'operating_days' => ['Sat', 'Sun'],
@@ -25,6 +26,15 @@ $form_data = [
     'pickup_window_end' => '14:00',
     'order_cutoff_hours' => 2
 ];
+
+// Fetch available registered farmers markets
+$markets = [];
+try {
+    $m_stmt = $pdo->query("SELECT market_id, market_name, address, operating_days, timings, latitude, longitude FROM markets ORDER BY market_name ASC");
+    $markets = $m_stmt->fetchAll();
+} catch (PDOException $e) {
+    error_log("Registration markets query error: " . $e->getMessage());
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
@@ -44,6 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($role === ROLE_FARMER) {
             $form_data['stall_name'] = sanitize_input($_POST['stall_name'] ?? '');
+            $form_data['market_id'] = (int)($_POST['market_id'] ?? 0);
             $form_data['address'] = sanitize_input($_POST['address'] ?? '');
             $form_data['operating_days'] = isset($_POST['operating_days']) && is_array($_POST['operating_days']) ? $_POST['operating_days'] : [];
             $form_data['pickup_window_start'] = sanitize_input($_POST['pickup_window_start'] ?? '08:00');
@@ -105,16 +116,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if ($role === ROLE_FARMER) {
                     $days_str = implode(',', $form_data['operating_days']);
-                    $profile_stmt = $pdo->prepare("INSERT INTO farmer_profiles (farmer_id, stall_name, address, operating_days, pickup_window_start, pickup_window_end, order_cutoff_hours) VALUES (:farmer_id, :stall_name, :address, :operating_days, :pickup_window_start, :pickup_window_end, :order_cutoff_hours)");
+                    
+                    // If a market is selected, inherit its default coordinates
+                    $lat = null;
+                    $lng = null;
+                    if ($form_data['market_id'] > 0) {
+                        foreach ($markets as $m) {
+                            if ((int)$m['market_id'] === $form_data['market_id']) {
+                                $lat = $m['latitude'] ?? null;
+                                $lng = $m['longitude'] ?? null;
+                                break;
+                            }
+                        }
+                    }
+
+                    $profile_stmt = $pdo->prepare("INSERT INTO farmer_profiles (farmer_id, stall_name, address, latitude, longitude, operating_days, pickup_window_start, pickup_window_end, order_cutoff_hours) VALUES (:farmer_id, :stall_name, :address, :lat, :lng, :operating_days, :pickup_window_start, :pickup_window_end, :order_cutoff_hours)");
                     $profile_stmt->execute([
                         ':farmer_id' => $user_id,
                         ':stall_name' => $form_data['stall_name'],
                         ':address' => $form_data['address'],
+                        ':lat' => $lat,
+                        ':lng' => $lng,
                         ':operating_days' => $days_str,
                         ':pickup_window_start' => $form_data['pickup_window_start'],
                         ':pickup_window_end' => $form_data['pickup_window_end'],
                         ':order_cutoff_hours' => $form_data['order_cutoff_hours']
                     ]);
+
+                    // Link stall with the chosen market in market_farmers
+                    if ($form_data['market_id'] > 0) {
+                        $mf_stmt = $pdo->prepare("INSERT INTO market_farmers (market_id, farmer_id) VALUES (:mid, :fid)");
+                        $mf_stmt->execute([
+                            ':mid' => $form_data['market_id'],
+                            ':fid' => $user_id
+                        ]);
+                    }
                 }
 
                 $pdo->commit();
@@ -255,8 +291,31 @@ require_once __DIR__ . '/../includes/header.php';
                         <div id="farmerFields" style="<?= $form_data['role'] === ROLE_FARMER ? '' : 'display: none;' ?>">
                             <div class="p-3 bg-light rounded-3 border mb-3">
                                 <h6 class="text-primary fw-bold mb-3 small text-uppercase letter-spacing-1">
-                                    <i class="bi bi-shop me-1"></i> Stall &amp; Pickup Details
+                                    <i class="bi bi-shop me-1"></i> Stall &amp; Market Details
                                 </h6>
+
+                                <!-- Select Designated Market -->
+                                <div class="mb-3">
+                                    <label class="form-label small fw-semibold" for="market_id">
+                                        <i class="bi bi-geo-alt text-primary me-1"></i> Market Venue (Optional)
+                                    </label>
+                                    <select class="form-select form-select-sm" id="market_id" name="market_id" onchange="onMarketSelected(this)">
+                                        <option value="">-- Select a Market (Optional) --</option>
+                                        <?php if (!empty($markets)): ?>
+                                            <?php foreach ($markets as $m): ?>
+                                                <option value="<?= $m['market_id'] ?>" 
+                                                        data-address="<?= e($m['address']) ?>"
+                                                        data-days="<?= e($m['operating_days'] ?? '') ?>"
+                                                        <?= (isset($form_data['market_id']) && (int)$form_data['market_id'] === (int)$m['market_id']) ? 'selected' : '' ?>>
+                                                    <?= e($m['market_name']) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    </select>
+                                    <small class="text-muted" style="font-size: 0.74rem;">
+                                        Optionally attach your stall to an official market venue.
+                                    </small>
+                                </div>
 
                                 <div class="mb-3">
                                     <label class="form-label small fw-semibold" for="stall_name">Farm / Stall Name <span class="text-danger">*</span></label>
@@ -308,9 +367,9 @@ require_once __DIR__ . '/../includes/header.php';
                             <div class="col-md-6">
                                 <label class="form-label small fw-semibold" for="password">Password <span class="text-danger">*</span></label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-lock"></i></span>
+                                    <span class="input-group-text border-end-0"><i class="bi bi-lock"></i></span>
                                     <input type="password" class="form-control border-start-0 border-end-0 <?= isset($errors['password']) ? 'is-invalid' : '' ?>" id="password" name="password" required placeholder="At least 6 characters">
-                                    <button class="btn btn-outline-secondary border-start-0 bg-light text-muted px-3" type="button" data-toggle-password="password" title="Show password" style="border-color: var(--border);">
+                                    <button class="btn btn-toggle-password" type="button" data-toggle-password="password" onclick="togglePasswordVisibility('password', this)" title="Show password" aria-label="Toggle password visibility">
                                         <i class="bi bi-eye"></i>
                                     </button>
                                     <?php if (isset($errors['password'])): ?><div class="invalid-feedback"><?= e($errors['password']) ?></div><?php endif; ?>
@@ -319,9 +378,9 @@ require_once __DIR__ . '/../includes/header.php';
                             <div class="col-md-6">
                                 <label class="form-label small fw-semibold" for="confirm_password">Confirm Password <span class="text-danger">*</span></label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-lock-fill"></i></span>
+                                    <span class="input-group-text border-end-0"><i class="bi bi-lock-fill"></i></span>
                                     <input type="password" class="form-control border-start-0 border-end-0 <?= isset($errors['confirm_password']) ? 'is-invalid' : '' ?>" id="confirm_password" name="confirm_password" required placeholder="Repeat password">
-                                    <button class="btn btn-outline-secondary border-start-0 bg-light text-muted px-3" type="button" data-toggle-password="confirm_password" title="Show password" style="border-color: var(--border);">
+                                    <button class="btn btn-toggle-password" type="button" data-toggle-password="confirm_password" onclick="togglePasswordVisibility('confirm_password', this)" title="Show password" aria-label="Toggle password visibility">
                                         <i class="bi bi-eye"></i>
                                     </button>
                                     <?php if (isset($errors['confirm_password'])): ?><div class="invalid-feedback"><?= e($errors['confirm_password']) ?></div><?php endif; ?>
@@ -361,6 +420,20 @@ function setRole(role) {
         nameLabel.textContent = 'Full Name';
         tabCustomer.classList.add('active');
         tabFarmer.classList.remove('active');
+    }
+}
+
+function onMarketSelected(selectEl) {
+    const selectedOption = selectEl.options[selectEl.selectedIndex];
+    if (!selectedOption || !selectedOption.value) return;
+
+    const marketAddress = selectedOption.getAttribute('data-address');
+    const addressInput = document.getElementById('address');
+    
+    // If address field is empty or unchanged from a previous market select, pre-populate
+    if (addressInput && (!addressInput.value.trim() || addressInput.dataset.autoFilled === 'true')) {
+        addressInput.value = marketAddress;
+        addressInput.dataset.autoFilled = 'true';
     }
 }
 </script>

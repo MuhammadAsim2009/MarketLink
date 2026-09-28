@@ -16,7 +16,7 @@ Update this file regularly as work happens.
   - High-end SaaS design system & stylesheet (`assets/css/style.css`) with responsive split-screen auth layouts and earthy design tokens.
   - Shared responsive header and footer (`includes/header.php`, `includes/footer.php`) with dynamic role-aware navigation, clean Dashboard shortcut button, non-conflicting z-index layering, centered icon buttons, and glassmorphism navbar.
   - SaaS Notifications Center (`notifications.php`) with dynamic category avatars (Orders, Accounts, Announcements, Reviews), live filter pills, relative timestamps, single & bulk read/clear controls, and helpful side widgets.
-  - Customer & Farmer registration (`auth/register.php`), unified login (`auth/login.php`), admin login (`auth/admin-login.php`), logout (`auth/logout.php`), and tokenized password reset flow (`auth/forgot-password.php`, `auth/reset-password.php`) featuring 2-column SaaS split-screen layouts with brand showcases and interactive show/hide password toggle buttons on all password fields.
+  - Customer & Farmer registration (`auth/register.php`), unified role-based login (`auth/login.php`), logout (`auth/logout.php`), and tokenized password reset flow (`auth/forgot-password.php`, `auth/reset-password.php`) featuring 2-column SaaS split-screen layouts with brand showcases and interactive show/hide password toggle buttons on all password fields.
   - Landing page (`index.php`) and role dashboard skeletons.
 
 - **Phase 2: Farmer Module (SaaS Portal Redesign)**

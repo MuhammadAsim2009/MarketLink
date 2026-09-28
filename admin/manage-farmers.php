@@ -63,7 +63,7 @@ try {
     $counts['all'] = array_sum($counts);
 } catch (PDOException $e) {}
 
-$sql = "SELECT u.user_id, u.name as contact_name, u.email, u.phone, u.status, u.created_at, 
+$sql = "SELECT u.user_id, u.name, u.name as contact_name, u.email, u.phone, u.status, u.created_at, 
         fp.stall_name, fp.address, fp.operating_days, fp.pickup_window_start, fp.pickup_window_end,
         (SELECT COUNT(*) FROM products WHERE farmer_id = u.user_id) as total_products, 
         (SELECT COUNT(*) FROM orders WHERE farmer_id = u.user_id) as total_orders, 
@@ -219,7 +219,6 @@ require_once __DIR__ . '/includes/header.php';
                                                 data-address="<?= e($f['address'] ?: 'Not specified') ?>"
                                                 data-days="<?= e($f['operating_days'] ?: 'Weekend Markets') ?>"
                                                 data-window="<?= e(($f['pickup_window_start'] ?? '08:00') . ' - ' . ($f['pickup_window_end'] ?? '14:00')) ?>"
-                                                data-bio="<?= e($f['bio'] ?? 'No farm description provided.') ?>"
                                                 data-status="<?= e($f['status']) ?>"
                                                 data-products="<?= (int)$f['total_products'] ?>"
                                                 data-orders="<?= (int)$f['total_orders'] ?>"
@@ -229,33 +228,38 @@ require_once __DIR__ . '/includes/header.php';
                                             <i class="bi bi-eye"></i>
                                         </button>
 
-                                        <!-- Public Stall Preview Link -->
-                                        <a href="<?= BASE_URL ?>customer/farmer-detail.php?farmer_id=<?= $f['user_id'] ?>" target="_blank" class="btn btn-light btn-sm border rounded-3" title="Preview Public Storefront">
-                                            <i class="bi bi-box-arrow-up-right"></i>
-                                        </a>
+                                        <!-- Public Stall Preview Link (Only for approved/active stalls) -->
+                                        <?php if ($f['status'] !== 'pending'): ?>
+                                            <a href="<?= BASE_URL ?>customer/farmer-detail.php?farmer_id=<?= $f['user_id'] ?>" target="_blank" class="btn btn-light btn-sm border rounded-3" title="Preview Public Storefront">
+                                                <i class="bi bi-box-arrow-up-right"></i>
+                                            </a>
+                                        <?php endif; ?>
 
                                         <!-- State actions -->
                                         <?php if ($f['status'] === 'pending'): ?>
-                                            <form method="POST" action="<?= BASE_URL ?>admin/manage-farmers.php" class="d-inline" onsubmit="return confirm('Approve this stall registration?');">
+                                            <form method="POST" action="<?= BASE_URL ?>admin/manage-farmers.php" class="d-inline" data-confirm="Approve stall registration for <?= e($f['contact_name']) ?> (<?= e($f['stall_name'] ?: 'Farm Stall') ?>)?" data-confirm-title="Approve Farmer Stall" data-confirm-type="success" data-confirm-btn="Yes, Approve">
                                                 <?= csrf_field() ?>
                                                 <input type="hidden" name="farmer_id" value="<?= $f['user_id'] ?>">
-                                                <button type="submit" name="action" value="approve" class="btn btn-success btn-sm rounded-3" title="Approve Stall">
+                                                <input type="hidden" name="action" value="approve">
+                                                <button type="submit" class="btn btn-success btn-sm rounded-3" title="Approve Stall">
                                                     <i class="bi bi-check-lg"></i>
                                                 </button>
                                             </form>
                                         <?php elseif ($f['status'] === 'active'): ?>
-                                            <form method="POST" action="<?= BASE_URL ?>admin/manage-farmers.php" class="d-inline" onsubmit="return confirm('Suspend this farmer account?');">
+                                            <form method="POST" action="<?= BASE_URL ?>admin/manage-farmers.php" class="d-inline" data-confirm="Suspend farmer account for <?= e($f['contact_name']) ?>? Their stall and products will be hidden from shoppers." data-confirm-title="Suspend Farmer Stall" data-confirm-type="danger" data-confirm-btn="Yes, Suspend">
                                                 <?= csrf_field() ?>
                                                 <input type="hidden" name="farmer_id" value="<?= $f['user_id'] ?>">
-                                                <button type="submit" name="action" value="suspend" class="btn btn-outline-danger btn-sm rounded-3" title="Suspend Account">
+                                                <input type="hidden" name="action" value="suspend">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm rounded-3" title="Suspend Account">
                                                     <i class="bi bi-pause-circle"></i>
                                                 </button>
                                             </form>
                                         <?php elseif ($f['status'] === 'suspended'): ?>
-                                            <form method="POST" action="<?= BASE_URL ?>admin/manage-farmers.php" class="d-inline" onsubmit="return confirm('Reactivate this farmer stall?');">
+                                            <form method="POST" action="<?= BASE_URL ?>admin/manage-farmers.php" class="d-inline" data-confirm="Reactivate farmer stall for <?= e($f['contact_name']) ?>?" data-confirm-title="Reactivate Farmer Stall" data-confirm-type="success" data-confirm-btn="Yes, Reactivate">
                                                 <?= csrf_field() ?>
                                                 <input type="hidden" name="farmer_id" value="<?= $f['user_id'] ?>">
-                                                <button type="submit" name="action" value="activate" class="btn btn-outline-success btn-sm rounded-3" title="Reactivate Account">
+                                                <input type="hidden" name="action" value="activate">
+                                                <button type="submit" class="btn btn-outline-success btn-sm rounded-3" title="Reactivate Account">
                                                     <i class="bi bi-play-circle"></i>
                                                 </button>
                                             </form>
@@ -348,10 +352,6 @@ require_once __DIR__ . '/includes/header.php';
                         <label class="small text-muted fw-semibold mb-1">Location & Stall Address</label>
                         <div id="dtAddress" class="p-2 bg-light rounded-3 border small">—</div>
                     </div>
-                    <div class="col-12">
-                        <label class="small text-muted fw-semibold mb-1">Producer Bio & Farming Practices</label>
-                        <div id="dtBio" class="p-3 bg-light rounded-3 border small text-secondary" style="line-height: 1.6;">—</div>
-                    </div>
                 </div>
             </div>
             <div class="modal-footer border-top py-3 px-4 bg-light d-flex justify-content-between">
@@ -377,7 +377,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const address = this.getAttribute('data-address');
                 const days = this.getAttribute('data-days');
                 const windowVal = this.getAttribute('data-window');
-                const bio = this.getAttribute('data-bio');
                 const status = this.getAttribute('data-status');
                 const products = this.getAttribute('data-products');
                 const orders = this.getAttribute('data-orders');
@@ -393,7 +392,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('dtAddress').textContent = address;
                 document.getElementById('dtDays').textContent = days;
                 document.getElementById('dtWindow').textContent = windowVal;
-                document.getElementById('dtBio').textContent = bio;
                 document.getElementById('dtProducts').textContent = products;
                 document.getElementById('dtOrders').textContent = orders;
                 document.getElementById('dtRevenue').textContent = revenue;

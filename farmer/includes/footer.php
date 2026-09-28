@@ -4,8 +4,8 @@
 
 <!-- Bootstrap 5.3.3 JS Bundle -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<!-- Leaflet JS -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<!-- Custom Vanilla JS & Modal System -->
+<script src="<?= ASSETS_URL ?>js/main.js?v=<?= time() ?>"></script>
 
 <script>
 // Mobile Sidebar Toggle and Backdrop Handlers

@@ -27,10 +27,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mid = (int)($_POST['market_id'] ?? 0);
         $market_name = sanitize_input($_POST['market_name'] ?? '');
         $address = sanitize_input($_POST['address'] ?? '');
-        $operating_days = sanitize_input($_POST['operating_days'] ?? '');
+        if (!empty($_POST['operating_days']) && is_array($_POST['operating_days'])) {
+            $operating_days = implode(',', array_map('sanitize_input', $_POST['operating_days']));
+        } elseif (!empty($_POST['operating_days']) && is_string($_POST['operating_days'])) {
+            $operating_days = sanitize_input($_POST['operating_days']);
+        } else {
+            $operating_days = 'Sat,Sun';
+        }
         $timings = sanitize_input($_POST['timings'] ?? '');
-        $latitude = !empty($_POST['latitude']) ? (float)$_POST['latitude'] : 31.5204;
-        $longitude = !empty($_POST['longitude']) ? (float)$_POST['longitude'] : 74.3587;
+        $latitude = !empty($_POST['latitude']) ? (float)$_POST['latitude'] : 27.5590;
+        $longitude = !empty($_POST['longitude']) ? (float)$_POST['longitude'] : 68.2120;
 
         if (empty($market_name)) {
             $errors['market_name'] = 'Market name is required.';
@@ -178,36 +184,109 @@ require_once __DIR__ . '/includes/header.php';
                             <?php if (isset($errors['address'])): ?><div class="invalid-feedback"><?= e($errors['address']) ?></div><?php endif; ?>
                         </div>
 
-                        <div class="row g-2 mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold" for="operating_days">Operating Days</label>
-                                <input type="text" class="form-control" id="operating_days" name="operating_days" value="<?= e($edit_market['operating_days'] ?? 'Sat,Sun') ?>" placeholder="e.g. Sat,Sun or Every Friday">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold d-block">
+                                <i class="bi bi-calendar-week text-primary me-1"></i> Operating Days <span class="text-danger">*</span>
+                            </label>
+                            <div class="d-flex flex-wrap gap-3 p-2 px-3 rounded border bg-light">
+                                <?php 
+                                $all_days = [
+                                    'Mon' => 'Monday',
+                                    'Tue' => 'Tuesday',
+                                    'Wed' => 'Wednesday',
+                                    'Thu' => 'Thursday',
+                                    'Fri' => 'Friday',
+                                    'Sat' => 'Saturday',
+                                    'Sun' => 'Sunday'
+                                ];
+                                $selected_days = !empty($edit_market['operating_days']) 
+                                    ? array_map('trim', explode(',', $edit_market['operating_days'])) 
+                                    : ['Sat', 'Sun'];
+                                foreach ($all_days as $code => $label): 
+                                ?>
+                                    <div class="form-check m-0">
+                                        <input class="form-check-input" type="checkbox" name="operating_days[]" value="<?= $code ?>" id="day_<?= $code ?>" <?= in_array($code, $selected_days) ? 'checked' : '' ?>>
+                                        <label class="form-check-label fw-medium small" for="day_<?= $code ?>" title="<?= $label ?>">
+                                            <?= $code ?>
+                                        </label>
+                                    </div>
+                                <?php endforeach; ?>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold" for="timings">Market Timings</label>
-                                <input type="text" class="form-control" id="timings" name="timings" value="<?= e($edit_market['timings'] ?? '07:00 AM - 02:00 PM') ?>" placeholder="e.g. 08:00 AM - 02:00 PM">
-                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" for="timings">Market Timings</label>
+                            <input type="text" class="form-control" id="timings" name="timings" value="<?= e($edit_market['timings'] ?? '07:00 AM - 02:00 PM') ?>" placeholder="e.g. 07:00 AM - 02:00 PM">
                         </div>
                     </div>
 
                     <!-- OpenStreetMap Location Picker -->
                     <div class="col-lg-6">
-                        <label class="form-label fw-semibold d-flex justify-content-between align-items-center">
-                            <span><i class="bi bi-pin-map-fill text-primary me-1"></i> Interactive Map Pin Location</span>
-                            <small class="text-muted fw-normal">Click or drag pin to position</small>
-                        </label>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label fw-semibold mb-0">
+                                <i class="bi bi-pin-map-fill text-primary me-1"></i> Market Pin Location
+                            </label>
+                            <button type="button" id="btnDetectGPS" class="btn btn-xs btn-outline-primary py-0 px-2" style="font-size:.75rem;">
+                                <i class="bi bi-crosshair me-1"></i> Use My Location
+                            </button>
+                        </div>
 
-                        <div id="adminMarketMap" style="height: 240px; border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: 0.8rem; z-index: 1;"></div>
+                        <!-- Search or paste Google Maps link -->
+                        <div class="input-group input-group-sm mb-1">
+                            <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+                            <input type="text" id="marketAddressSearch" class="form-control" placeholder="Search place, OR paste a Google Maps link…">
+                            <button type="button" id="btnSearchAddress" class="btn btn-primary">
+                                Locate
+                            </button>
+                        </div>
+                        <p class="text-muted mb-2" style="font-size:0.7rem;"><i class="bi bi-info-circle me-1"></i>Paste a full Google Maps URL (e.g. maps.google.com/place/...), type an address to search, or drag the map pin.</p>
 
-                        <div class="row g-2">
-                            <div class="col-6">
-                                <label class="form-label small fw-semibold text-muted" for="latitude">Latitude</label>
-                                <input type="number" step="0.00000001" class="form-control form-control-sm" id="latitude" name="latitude" value="<?= e($edit_market['latitude'] ?? '31.52040000') ?>">
+                        <!-- Detected Address Badge (Reverse Geocoding result) -->
+                        <div id="detectedAddressBadge" class="d-none mb-2 p-2 rounded-2 border bg-success-subtle d-flex align-items-start gap-2" style="font-size:0.78rem;">
+                            <i class="bi bi-geo-alt-fill text-success mt-1 flex-shrink-0"></i>
+                            <div>
+                                <span class="fw-semibold text-success d-block" style="font-size:0.7rem;">Detected Address</span>
+                                <span id="detectedAddressText" class="text-dark"></span>
+                                <button type="button" id="btnFillAddress" class="btn btn-xs btn-success mt-1 py-0 px-2" style="font-size:0.7rem;">
+                                    <i class="bi bi-arrow-down-circle me-1"></i>Fill into Address Field
+                                </button>
                             </div>
-                            <div class="col-6">
-                                <label class="form-label small fw-semibold text-muted" for="longitude">Longitude</label>
-                                <input type="number" step="0.00000001" class="form-control form-control-sm" id="longitude" name="longitude" value="<?= e($edit_market['longitude'] ?? '74.35870000') ?>">
+                        </div>
+
+                        <div id="adminMarketMap" style="height: 240px; border-radius: var(--radius-sm); border: 1px solid var(--border-color, #dee2e6); margin-bottom: 0.8rem; overflow: hidden; position: relative;"></div>
+
+                        <!-- Advanced: Collapsible raw coordinates -->
+                        <div class="mb-1">
+                            <a class="text-muted d-flex align-items-center gap-1" data-bs-toggle="collapse" href="#advancedCoordsAdmin" role="button" aria-expanded="false" style="font-size:0.75rem; text-decoration:none;">
+                                <i class="bi bi-chevron-right" id="advCoordsChevron" style="transition:transform .2s;"></i>
+                                <span>⚙️ Advanced: Fine-tune GPS coordinates</span>
+                            </a>
+                            <div class="collapse" id="advancedCoordsAdmin">
+                                <div class="row g-2 align-items-center mt-1">
+                                    <div class="col-5">
+                                        <label class="form-label small fw-semibold text-muted mb-1" for="latitude">Latitude</label>
+                                        <input type="number" step="0.00000001" class="form-control form-control-sm font-monospace" id="latitude" name="latitude" value="<?= e($edit_market['latitude'] ?? '27.55900000') ?>">
+                                    </div>
+                                    <div class="col-5">
+                                        <label class="form-label small fw-semibold text-muted mb-1" for="longitude">Longitude</label>
+                                        <input type="number" step="0.00000001" class="form-control form-control-sm font-monospace" id="longitude" name="longitude" value="<?= e($edit_market['longitude'] ?? '68.21200000') ?>">
+                                    </div>
+                                    <div class="col-2 pt-4">
+                                        <a id="previewMapsLink" href="https://www.google.com/maps/search/?api=1&query=<?= e($edit_market['latitude'] ?? '27.5590') ?>,<?= e($edit_market['longitude'] ?? '68.2120') ?>" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary w-100 p-1" title="Test in Google Maps">
+                                            <i class="bi bi-box-arrow-up-right"></i>
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
+                        </div>
+
+                        <!-- Compact GPS pill always visible -->
+                        <div class="d-flex align-items-center gap-2 mt-2">
+                            <span class="badge bg-light text-secondary border" style="font-size:0.7rem; font-family:monospace;" id="gpsPillAdmin">
+                                <i class="bi bi-crosshair me-1"></i>
+                                <span id="gpsPillText"><?= number_format((float)($edit_market['latitude'] ?? 27.5590), 4) ?>, <?= number_format((float)($edit_market['longitude'] ?? 68.2120), 4) ?></span>
+                            </span>
+                            <span class="text-muted" style="font-size:0.68rem;">← Auto-updates when pin moves</span>
                         </div>
                     </div>
                 </div>
@@ -224,27 +303,256 @@ require_once __DIR__ . '/includes/header.php';
 
     <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const lat = parseFloat(document.getElementById('latitude').value) || 31.5204;
-        const lng = parseFloat(document.getElementById('longitude').value) || 74.3587;
+        const latInput = document.getElementById('latitude');
+        const lngInput = document.getElementById('longitude');
+        const previewMapsLink = document.getElementById('previewMapsLink');
+        const btnDetectGPS = document.getElementById('btnDetectGPS');
+        const searchInput = document.getElementById('marketAddressSearch');
+        const btnSearch = document.getElementById('btnSearchAddress');
+        const detectedBadge = document.getElementById('detectedAddressBadge');
+        const detectedText = document.getElementById('detectedAddressText');
+        const btnFillAddress = document.getElementById('btnFillAddress');
+        const gpsPillText = document.getElementById('gpsPillText');
+        const addressField = document.getElementById('address');
+        const advCollapseEl = document.getElementById('advancedCoordsAdmin');
+        const advChevron = document.getElementById('advCoordsChevron');
 
-        const map = L.map('adminMarketMap').setView([lat, lng], 13);
+        let initialLat = parseFloat(latInput.value) || 27.5590;
+        let initialLng = parseFloat(lngInput.value) || 68.2120;
+        let lastReverseGeoAddress = '';
+
+        const map = L.map('adminMarketMap', {
+            zoomControl: true,
+            scrollWheelZoom: true
+        }).setView([initialLat, initialLng], 14);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap'
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19
         }).addTo(map);
+        // Force tile re-render after layout settles
+        setTimeout(function() { map.invalidateSize(); }, 300);
 
-        let marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+        const marketPinHtml = `
+            <div style="background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 2px solid #ffffff;">
+                <i class="bi bi-geo-alt-fill" style="font-size: 16px;"></i>
+            </div>
+        `;
+        const customIcon = L.divIcon({
+            className: 'custom-admin-pin',
+            html: marketPinHtml,
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -32]
+        });
+
+        let marker = L.marker([initialLat, initialLng], { draggable: true, icon: customIcon }).addTo(map);
+
+        // ── Feature 6: Reverse Geocoding – fetch address for a coordinate ──
+        function reverseGeocode(lat, lng) {
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=17&addressdetails=1`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.display_name) {
+                        lastReverseGeoAddress = data.display_name;
+                        detectedText.textContent = data.display_name;
+                        detectedBadge.classList.remove('d-none');
+                    }
+                })
+                .catch(() => {}); // Silent – map still works without reverse geo
+        }
+
+        // ── Core: update lat/lng inputs, pill, and map preview link ──
+        function updatePosition(lat, lng, pan = false) {
+            latInput.value = parseFloat(lat).toFixed(8);
+            lngInput.value = parseFloat(lng).toFixed(8);
+            marker.setLatLng([lat, lng]);
+            if (pan) map.setView([lat, lng], 15);
+            if (previewMapsLink) {
+                previewMapsLink.href = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+            }
+            if (gpsPillText) {
+                gpsPillText.textContent = `${parseFloat(lat).toFixed(4)}, ${parseFloat(lng).toFixed(4)}`;
+            }
+            // Trigger reverse geocoding after pin placement
+            reverseGeocode(lat, lng);
+        }
+
+        // ── Fill-address button ──
+        if (btnFillAddress && addressField) {
+            btnFillAddress.addEventListener('click', function () {
+                if (lastReverseGeoAddress) {
+                    addressField.value = lastReverseGeoAddress;
+                    detectedBadge.classList.add('d-none');
+                }
+            });
+        }
+
+        // ── Chevron animation for Advanced collapse ──
+        if (advCollapseEl && advChevron) {
+            advCollapseEl.addEventListener('show.bs.collapse', function () {
+                advChevron.style.transform = 'rotate(90deg)';
+            });
+            advCollapseEl.addEventListener('hide.bs.collapse', function () {
+                advChevron.style.transform = 'rotate(0deg)';
+            });
+        }
 
         marker.on('dragend', function (e) {
             const pos = marker.getLatLng();
-            document.getElementById('latitude').value = pos.lat.toFixed(8);
-            document.getElementById('longitude').value = pos.lng.toFixed(8);
+            updatePosition(pos.lat, pos.lng);
         });
 
         map.on('click', function (e) {
-            marker.setLatLng(e.latlng);
-            document.getElementById('latitude').value = e.latlng.lat.toFixed(8);
-            document.getElementById('longitude').value = e.latlng.lng.toFixed(8);
+            updatePosition(e.latlng.lat, e.latlng.lng);
         });
+
+        latInput.addEventListener('input', function() {
+            const lat = parseFloat(latInput.value);
+            const lng = parseFloat(lngInput.value);
+            if (!isNaN(lat) && !isNaN(lng)) updatePosition(lat, lng, true);
+        });
+
+        lngInput.addEventListener('input', function() {
+            const lat = parseFloat(latInput.value);
+            const lng = parseFloat(lngInput.value);
+            if (!isNaN(lat) && !isNaN(lng)) updatePosition(lat, lng, true);
+        });
+
+        // ── Feature 4: GPS button ──
+        if (btnDetectGPS) {
+            btnDetectGPS.addEventListener('click', function() {
+                if (!navigator.geolocation) {
+                    customAlert({ title: 'GPS Not Supported', message: 'Geolocation is not supported by your browser.', type: 'warning' });
+                    return;
+                }
+                btnDetectGPS.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Detecting...';
+                navigator.geolocation.getCurrentPosition(
+                    function(pos) {
+                        btnDetectGPS.innerHTML = '<i class="bi bi-crosshair me-1"></i> Use My Location';
+                        updatePosition(pos.coords.latitude, pos.coords.longitude, true);
+                    },
+                    function(err) {
+                        btnDetectGPS.innerHTML = '<i class="bi bi-crosshair me-1"></i> Use My Location';
+                        customAlert({ title: 'GPS Error', message: 'Could not detect location: ' + (err.message || 'Permission denied'), type: 'danger' });
+                    },
+                    { enableHighAccuracy: true, timeout: 8000 }
+                );
+            });
+        }
+
+        // ── Feature 3: Google Maps URL parser + raw coordinate detector ──
+        function tryExtractGoogleMapsCoords(input) {
+            if (!input) return null;
+            const decoded = decodeURIComponent(input);
+
+            // Pattern 1: Exact Place Pin (!3dlat!4dlng or !8m2!3dlat!4dlng) - HIGHEST PRIORITY
+            let m = decoded.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+            if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+
+            // Pattern 2: loc:lat,lng
+            m = decoded.match(/loc:(-?\d+\.\d+)[,\s+]+(-?\d+\.\d+)/i);
+            if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+
+            // Pattern 3: ?q=lat,lng or &q=lat,lng
+            m = decoded.match(/[?&]q=(-?\d+\.\d+)[,\s+]+(-?\d+\.\d+)/);
+            if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+
+            // Pattern 4: ?query=lat,lng
+            m = decoded.match(/[?&]query=(-?\d+\.\d+)[,\s+]+(-?\d+\.\d+)/);
+            if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+
+            // Pattern 5: /place/lat,lng or /place/lat+lng or /place/lat lng
+            m = decoded.match(/\/place\/(-?\d+\.\d+)[,\s+]+(-?\d+\.\d+)/);
+            if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+
+            // Pattern 6: ll=lat,lng or center=lat,lng or sll=lat,lng
+            m = decoded.match(/[?&](?:ll|center|sll)=(-?\d+\.\d+)[,\s+]+(-?\d+\.\d+)/);
+            if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+
+            // Pattern 7: Raw coordinates pasted (e.g. "27.5590, 68.2120" or "27.5590 68.2120")
+            m = decoded.trim().match(/^(-?\d{1,2}\.\d+)[,\s]+(-?\d{1,3}\.\d+)$/);
+            if (m) {
+                const lat = parseFloat(m[1]), lng = parseFloat(m[2]);
+                if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+                    return { lat, lng };
+                }
+            }
+
+            // Pattern 8: @lat,lng (Camera/Viewport center fallback)
+            m = decoded.match(/@(-?\d+\.\d+)[,\s+]+(-?\d+\.\d+)/);
+            if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+
+            return null;
+        }
+
+        function executeSearch() {
+            const q = searchInput.value.trim();
+            if (!q) return;
+
+            // ── Raw coordinates or direct Google Maps URL extraction ──
+            const immediateCoords = tryExtractGoogleMapsCoords(q);
+            if (immediateCoords) {
+                updatePosition(immediateCoords.lat, immediateCoords.lng, true);
+                searchInput.value = '';
+                return;
+            }
+
+            // ── If user pasted a short link (goo.gl / maps.app.goo.gl) ──
+            if (/(?:goo\.gl|maps\.app\.goo\.gl|g\.co)/i.test(q)) {
+                customAlert({
+                    title: 'Use Full Google Maps URL',
+                    message: 'Shortened links (goo.gl / maps.app.goo.gl) do not contain GPS coordinates. Please open the link in your browser, copy the full URL from the address bar, and paste it here.',
+                    type: 'info'
+                });
+                return;
+            }
+
+            // ── Feature 2: Nominatim address geocoding search (with Pakistan bias) ──
+            btnSearch.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
+            btnSearch.disabled = true;
+
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&countrycodes=pk&limit=1`)
+                .then(res => res.json())
+                .then(data => {
+                    // Fallback to global search if no Pakistan match found
+                    if (!data || data.length === 0) {
+                        return fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`).then(r => r.json());
+                    }
+                    return data;
+                })
+                .then(data => {
+                    btnSearch.innerHTML = 'Locate';
+                    btnSearch.disabled = false;
+                    if (data && data.length > 0) {
+                        const resLat = parseFloat(data[0].lat);
+                        const resLng = parseFloat(data[0].lon);
+                        updatePosition(resLat, resLng, true);
+                    } else {
+                        customAlert({ title: 'Location Not Found', message: 'No coordinates found for this search. Try searching with a broader city or landmark name.', type: 'warning' });
+                    }
+                })
+                .catch(err => {
+                    btnSearch.innerHTML = 'Locate';
+                    btnSearch.disabled = false;
+                    customAlert({ title: 'Geocoding Service Unavailable', message: 'Error reaching OpenStreetMap geocoding service.', type: 'danger' });
+                });
+        }
+
+        if (btnSearch) {
+            btnSearch.addEventListener('click', executeSearch);
+        }
+        if (searchInput) {
+            searchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    executeSearch();
+                }
+            });
+            // Auto-detect paste of Google Maps URL
+            searchInput.addEventListener('paste', function(e) {
+                setTimeout(executeSearch, 100);
+            });
+        }
     });
     </script>
 
@@ -359,7 +667,7 @@ require_once __DIR__ . '/includes/header.php';
                                             <a href="<?= BASE_URL ?>admin/manage-markets.php?action=edit&id=<?= $m['market_id'] ?>" class="btn btn-outline-primary btn-sm py-1 px-2" title="Edit Market">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
-                                            <form method="POST" action="<?= BASE_URL ?>admin/manage-markets.php" class="d-inline" onsubmit="return confirm('Delete market <?= e($m['market_name']) ?>?');">
+                                            <form method="POST" action="<?= BASE_URL ?>admin/manage-markets.php" class="d-inline" data-confirm="Permanently delete farmers market venue <?= e($m['market_name']) ?>?" data-confirm-title="Delete Market Venue" data-confirm-type="danger" data-confirm-btn="Yes, Delete">
                                                 <?= csrf_field() ?>
                                                 <input type="hidden" name="form_action" value="delete_market">
                                                 <input type="hidden" name="market_id" value="<?= $m['market_id'] ?>">
@@ -394,6 +702,7 @@ require_once __DIR__ . '/includes/header.php';
     document.addEventListener('DOMContentLoaded', function () {
         const marketsData = <?= json_encode(array_map(function($m) {
             return [
+                'id' => (int)$m['market_id'],
                 'name' => $m['market_name'],
                 'address' => $m['address'],
                 'lat' => (float)$m['latitude'],
@@ -409,20 +718,42 @@ require_once __DIR__ . '/includes/header.php';
             const map = L.map('allMarketsMap').setView([first.lat, first.lng], 11);
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap'
+                attribution: '&copy; OpenStreetMap contributors'
             }).addTo(map);
+
+            const marketPinHtml = `
+                <div style="background: linear-gradient(135deg, #2E7D4F, #1e3a8a); color: white; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 2px solid #ffffff;">
+                    <i class="bi bi-buildings-fill" style="font-size: 16px;"></i>
+                </div>
+            `;
+            const customIcon = L.divIcon({
+                className: 'custom-overview-pin',
+                html: marketPinHtml,
+                iconSize: [34, 34],
+                iconAnchor: [17, 34],
+                popupAnchor: [0, -34]
+            });
 
             const bounds = [];
             marketsData.forEach(function(m) {
                 if (m.lat && m.lng) {
-                    const marker = L.marker([m.lat, m.lng]).addTo(map);
+                    const marker = L.marker([m.lat, m.lng], { icon: customIcon }).addTo(map);
                     marker.bindPopup(`
-                        <div style="font-family: inherit; font-size: 13px;">
+                        <div style="font-family: inherit; font-size: 13px; min-width: 200px;">
                             <strong style="color: #2E7D4F; font-size: 14px;">${m.name}</strong><br>
-                            <span style="color: #64748b;">${m.address}</span><br>
-                            <div style="margin-top: 5px; font-size: 12px;">
-                                <strong>Days:</strong> ${m.days} | <strong>Time:</strong> ${m.timings}<br>
-                                <strong>Active Stalls:</strong> ${m.stalls}
+                            <span style="color: #64748b; font-size: 12px;"><i class="bi bi-geo-alt me-1"></i>${m.address}</span>
+                            <div style="margin-top: 6px; font-size: 12px; background: #f8fafc; padding: 6px 8px; border-radius: 4px; border: 1px solid #e2e8f0;">
+                                <div><strong>Days:</strong> ${m.days}</div>
+                                <div><strong>Hours:</strong> ${m.timings}</div>
+                                <div><strong>Active Stalls:</strong> ${m.stalls}</div>
+                            </div>
+                            <div class="d-flex gap-1 mt-2">
+                                <a href="https://www.google.com/maps/dir/?api=1&destination=${m.lat},${m.lng}" target="_blank" rel="noopener noreferrer" class="btn btn-xs btn-outline-primary w-100 py-1" style="font-size: 11px; text-decoration: none;">
+                                    <i class="bi bi-pin-map-fill text-danger me-1"></i> Get Directions
+                                </a>
+                                <a href="<?= BASE_URL ?>customer/browse-markets.php?market_id=${m.id}" target="_blank" class="btn btn-xs btn-primary w-100 py-1" style="font-size: 11px; text-decoration: none;">
+                                    <i class="bi bi-shop me-1"></i> Stalls
+                                </a>
                             </div>
                         </div>
                     `);

@@ -90,13 +90,13 @@ require_once __DIR__ . '/includes/header.php';
         <p class="text-muted small mb-0">System health monitoring, stall approvals queue, and community engagement metrics</p>
     </div>
     <div class="d-flex flex-wrap gap-2">
-        <a href="<?= BASE_URL ?>admin/manage-markets.php?action=add" class="btn btn-outline-secondary btn-sm rounded-3">
+        <a href="<?= BASE_URL ?>admin/manage-markets.php?action=add" class="btn btn-white border shadow-xs btn-sm rounded-3">
             <i class="bi bi-geo-alt-fill me-1 text-primary"></i> + New Market
         </a>
-        <a href="<?= BASE_URL ?>admin/moderation.php" class="btn btn-outline-secondary btn-sm rounded-3">
+        <a href="<?= BASE_URL ?>admin/moderation.php" class="btn btn-white border shadow-xs btn-sm rounded-3">
             <i class="bi bi-broadcast me-1 text-info"></i> Broadcast Notice
         </a>
-        <a href="<?= BASE_URL ?>admin/reports.php" class="btn btn-primary btn-sm rounded-3">
+        <a href="<?= BASE_URL ?>admin/reports.php" class="btn btn-primary btn-sm rounded-3 shadow-xs">
             <i class="bi bi-graph-up me-1"></i> Full Analytics
         </a>
     </div>
@@ -265,18 +265,20 @@ require_once __DIR__ . '/includes/header.php';
                                                     <i class="bi bi-eye"></i>
                                                 </button>
 
-                                                <form method="POST" action="<?= BASE_URL ?>admin/dashboard.php" class="d-inline" onsubmit="return confirm('Approve and activate <?= e($pf['name']) ?>\'s farmer stall?');">
+                                                <form method="POST" action="<?= BASE_URL ?>admin/dashboard.php" class="d-inline" data-confirm="Approve and activate stall registration for <?= e($pf['name']) ?>?" data-confirm-title="Approve Farmer Stall" data-confirm-type="success" data-confirm-btn="Yes, Approve">
                                                     <?= csrf_field() ?>
                                                     <input type="hidden" name="farmer_id" value="<?= $pf['user_id'] ?>">
-                                                    <button type="submit" name="action" value="approve" class="btn btn-success btn-sm rounded-3" title="Approve Stall">
+                                                    <input type="hidden" name="action" value="approve">
+                                                    <button type="submit" class="btn btn-success btn-sm rounded-3" title="Approve Stall">
                                                         <i class="bi bi-check-lg"></i>
                                                     </button>
                                                 </form>
 
-                                                <form method="POST" action="<?= BASE_URL ?>admin/dashboard.php" class="d-inline" onsubmit="return confirm('Reject and suspend this farmer registration?');">
+                                                <form method="POST" action="<?= BASE_URL ?>admin/dashboard.php" class="d-inline" data-confirm="Reject application and suspend registration for <?= e($pf['name']) ?>?" data-confirm-title="Reject Registration" data-confirm-type="danger" data-confirm-btn="Yes, Reject">
                                                     <?= csrf_field() ?>
                                                     <input type="hidden" name="farmer_id" value="<?= $pf['user_id'] ?>">
-                                                    <button type="submit" name="action" value="suspend" class="btn btn-outline-danger btn-sm rounded-3" title="Reject Application">
+                                                    <input type="hidden" name="action" value="suspend">
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm rounded-3" title="Reject Application">
                                                         <i class="bi bi-x-lg"></i>
                                                     </button>
                                                 </form>
@@ -353,48 +355,56 @@ require_once __DIR__ . '/includes/header.php';
             </div>
             <div class="card-body p-3">
                 <div class="d-grid gap-2">
-                    <a href="<?= BASE_URL ?>admin/manage-markets.php?action=add" class="btn btn-outline-primary text-start p-3 rounded-3 d-flex align-items-center justify-content-between">
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="bi bi-plus-circle-dotted fs-5"></i>
+                    <a href="<?= BASE_URL ?>admin/manage-markets.php?action=add" class="admin-shortcut-item">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="shortcut-icon-box bg-primary-subtle text-primary">
+                                <i class="bi bi-geo-alt-fill"></i>
+                            </div>
                             <div>
-                                <div class="fw-bold small">Add Farmers Market</div>
-                                <small class="text-muted" style="font-size: 0.75rem;">Set coordinates & operating hours</small>
+                                <div class="shortcut-title">Add Farmers Market</div>
+                                <div class="shortcut-desc">Set coordinates & operating hours</div>
                             </div>
                         </div>
-                        <i class="bi bi-chevron-right small opacity-50"></i>
+                        <i class="bi bi-chevron-right shortcut-arrow"></i>
                     </a>
 
-                    <a href="<?= BASE_URL ?>admin/moderation.php" class="btn btn-outline-secondary text-start p-3 rounded-3 d-flex align-items-center justify-content-between">
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="bi bi-broadcast fs-5 text-info"></i>
+                    <a href="<?= BASE_URL ?>admin/moderation.php" class="admin-shortcut-item">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="shortcut-icon-box bg-info-subtle text-info">
+                                <i class="bi bi-broadcast"></i>
+                            </div>
                             <div>
-                                <div class="fw-bold small">Send System Broadcast</div>
-                                <small class="text-muted" style="font-size: 0.75rem;">Deliver in-app bulletin to users</small>
+                                <div class="shortcut-title">Send System Broadcast</div>
+                                <div class="shortcut-desc">Deliver in-app bulletin to users</div>
                             </div>
                         </div>
-                        <i class="bi bi-chevron-right small opacity-50"></i>
+                        <i class="bi bi-chevron-right shortcut-arrow"></i>
                     </a>
 
-                    <a href="<?= BASE_URL ?>admin/manage-farmers.php?status=pending" class="btn btn-outline-secondary text-start p-3 rounded-3 d-flex align-items-center justify-content-between">
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="bi bi-person-lines-fill fs-5 text-warning"></i>
+                    <a href="<?= BASE_URL ?>admin/manage-farmers.php?status=pending" class="admin-shortcut-item">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="shortcut-icon-box bg-warning-subtle text-warning">
+                                <i class="bi bi-person-lines-fill"></i>
+                            </div>
                             <div>
-                                <div class="fw-bold small">Pending Farmers Queue</div>
-                                <small class="text-muted" style="font-size: 0.75rem;"><?= $pending_farmers_count ?> application(s) awaiting review</small>
+                                <div class="shortcut-title">Pending Farmers Queue</div>
+                                <div class="shortcut-desc"><?= $pending_farmers_count ?> application(s) awaiting review</div>
                             </div>
                         </div>
-                        <i class="bi bi-chevron-right small opacity-50"></i>
+                        <i class="bi bi-chevron-right shortcut-arrow"></i>
                     </a>
 
-                    <a href="<?= BASE_URL ?>admin/reports.php" class="btn btn-outline-secondary text-start p-3 rounded-3 d-flex align-items-center justify-content-between">
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="bi bi-printer fs-5 text-success"></i>
+                    <a href="<?= BASE_URL ?>admin/reports.php" class="admin-shortcut-item">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="shortcut-icon-box bg-success-subtle text-success">
+                                <i class="bi bi-file-earmark-bar-graph-fill"></i>
+                            </div>
                             <div>
-                                <div class="fw-bold small">Export Monthly Report</div>
-                                <small class="text-muted" style="font-size: 0.75rem;">Printable summary & charts</small>
+                                <div class="shortcut-title">Export Monthly Report</div>
+                                <div class="shortcut-desc">Printable summary & analytics charts</div>
                             </div>
                         </div>
-                        <i class="bi bi-chevron-right small opacity-50"></i>
+                        <i class="bi bi-chevron-right shortcut-arrow"></i>
                     </a>
                 </div>
             </div>

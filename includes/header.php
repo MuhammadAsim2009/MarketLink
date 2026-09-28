@@ -35,6 +35,26 @@ if (is_logged_in() && isset($pdo)) {
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
     <!-- MarketLink Design System -->
     <link rel="stylesheet" href="<?= ASSETS_URL ?>css/style.css?v=<?= time() ?>">
+    <script>
+    function togglePasswordVisibility(targetId, btnEl) {
+        if (!targetId) return;
+        var input = document.getElementById(targetId);
+        if (!input) return;
+        var btn = btnEl || document.querySelector('[data-toggle-password="' + targetId + '"]');
+        var icon = btn ? btn.querySelector('i') : null;
+
+        if (input.type === 'password') {
+            input.type = 'text';
+            if (icon) icon.className = 'bi bi-eye-slash';
+            if (btn) btn.setAttribute('title', 'Hide password');
+        } else {
+            input.type = 'password';
+            if (icon) icon.className = 'bi bi-eye';
+            if (btn) btn.setAttribute('title', 'Show password');
+        }
+    }
+    window.togglePasswordVisibility = togglePasswordVisibility;
+    </script>
 </head>
 <body>
 

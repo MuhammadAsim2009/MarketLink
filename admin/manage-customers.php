@@ -207,18 +207,20 @@ require_once __DIR__ . '/includes/header.php';
                                         </button>
 
                                         <?php if ($c['status'] === 'active'): ?>
-                                            <form method="POST" action="<?= BASE_URL ?>admin/manage-customers.php" class="d-inline" onsubmit="return confirm('Suspend <?= e($c['name']) ?>\'s customer account?');">
+                                            <form method="POST" action="<?= BASE_URL ?>admin/manage-customers.php" class="d-inline" data-confirm="Suspend customer account for <?= e($c['name']) ?>? They will be unable to log in or place pre-orders." data-confirm-title="Suspend Customer Account" data-confirm-type="danger" data-confirm-btn="Yes, Suspend">
                                                 <?= csrf_field() ?>
                                                 <input type="hidden" name="customer_id" value="<?= $c['user_id'] ?>">
-                                                <button type="submit" name="action" value="suspend" class="btn btn-outline-danger btn-sm rounded-3" title="Suspend Account">
+                                                <input type="hidden" name="action" value="suspend">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm rounded-3" title="Suspend Account">
                                                     <i class="bi bi-pause-circle"></i>
                                                 </button>
                                             </form>
                                         <?php elseif ($c['status'] === 'suspended'): ?>
-                                            <form method="POST" action="<?= BASE_URL ?>admin/manage-customers.php" class="d-inline" onsubmit="return confirm('Reactivate <?= e($c['name']) ?>\'s account?');">
+                                            <form method="POST" action="<?= BASE_URL ?>admin/manage-customers.php" class="d-inline" data-confirm="Reactivate customer account for <?= e($c['name']) ?>?" data-confirm-title="Reactivate Customer Account" data-confirm-type="success" data-confirm-btn="Yes, Reactivate">
                                                 <?= csrf_field() ?>
                                                 <input type="hidden" name="customer_id" value="<?= $c['user_id'] ?>">
-                                                <button type="submit" name="action" value="activate" class="btn btn-outline-success btn-sm rounded-3" title="Reactivate Account">
+                                                <input type="hidden" name="action" value="activate">
+                                                <button type="submit" class="btn btn-outline-success btn-sm rounded-3" title="Reactivate Account">
                                                     <i class="bi bi-play-circle"></i>
                                                 </button>
                                             </form>

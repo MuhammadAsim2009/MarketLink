@@ -112,7 +112,7 @@ Use these accounts to demo every role:
 
 | Role | Email | Password | Notes |
 |---|---|---|---|
-| **Admin** | `admin@marketlink.test` | `Admin@123` | Login via `http://localhost/marketlink/auth/admin-login.php` |
+| **Admin** | `admin@marketlink.test` | `Admin@123` | Login via `http://localhost/marketlink/auth/login.php` |
 | **Farmer** | `greenvalley@marketlink.test` | `Farmer@123` | Active farmer — Green Valley Organics |
 | **Farmer** | `sunnyorchard@marketlink.test` | `Farmer@123` | Active farmer — Sunny Orchards |
 | **Farmer** | `happyhen@marketlink.test` | `Farmer@123` | Active farmer — Happy Hen Pastures |
@@ -144,7 +144,7 @@ Use these accounts to demo every role:
 9. **Reviews** → review a completed order
 
 ### 🔑 Admin Flow
-1. Navigate to `http://localhost/marketlink/auth/admin-login.php`
+1. Navigate to `http://localhost/marketlink/auth/login.php`
 2. Log in as `admin@marketlink.test`
 3. **Dashboard** → view platform KPIs
 4. **Manage Farmers** → approve the pending `artisan@marketlink.test` account

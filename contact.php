@@ -104,16 +104,39 @@ require_once __DIR__ . '/includes/header.php';
 <!-- Leaflet Map Script -->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const lat = 31.5204;
-    const lng = 74.3587;
+    const lat = 27.5590;
+    const lng = 68.2120;
     const map = L.map('contactMap').setView([lat, lng], 14);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
 
-    L.marker([lat, lng]).addTo(map)
-        .bindPopup('<strong>MarketLink Support Hub</strong><br>Central Farmers Market Plaza')
+    const contactPinHtml = `
+        <div style="background: linear-gradient(135deg, #2E7D4F, #1e3a8a); color: white; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 2px solid #ffffff;">
+            <i class="bi bi-buildings-fill" style="font-size: 16px;"></i>
+        </div>
+    `;
+    const customIcon = L.divIcon({
+        className: 'custom-contact-pin',
+        html: contactPinHtml,
+        iconSize: [34, 34],
+        iconAnchor: [17, 34],
+        popupAnchor: [0, -34]
+    });
+
+    L.marker([lat, lng], { icon: customIcon }).addTo(map)
+        .bindPopup(`
+            <div style="font-family: inherit; font-size: 13px; min-width: 180px;">
+                <strong style="color: #2E7D4F; font-size: 14px;">MarketLink Support Hub</strong><br>
+                <span style="color: #64748b; font-size: 12px;">Central Farmers Market Plaza, Larkana</span>
+                <div class="mt-2 pt-2 border-top">
+                    <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" target="_blank" rel="noopener noreferrer" class="btn btn-xs btn-outline-primary w-100 py-1" style="font-size: 11px; text-decoration: none;">
+                        <i class="bi bi-pin-map-fill text-danger me-1"></i> Get Directions
+                    </a>
+                </div>
+            </div>
+        `)
         .openPopup();
 });
 </script>

@@ -6,7 +6,7 @@ Organized by build priority (see CLAUDE.md for the priority order).
 ## 1. Auth & Roles
 - [x] ✅ Customer registration (name, phone, email, address, password)
 - [x] ✅ Farmer registration (stall name, contact person, phone, email, address)
-- [x] ✅ Login (shared form, redirect by role) + separate Admin login (`auth/admin-login.php`)
+- [x] ✅ Login (shared unified form `auth/login.php`, redirect by role: Admin, Farmer, Customer)
 - [x] ✅ Secure session management (PHP sessions, role stored server-side)
 - [x] ✅ Logout (`auth/logout.php`)
 - [x] ✅ Password reset via tokenized link stored in `password_resets` table (token shown on-screen for demo — no mail server required)

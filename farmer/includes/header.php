@@ -75,6 +75,8 @@ $user_initial = $farmer_name ? strtoupper(mb_substr($farmer_name, 0, 1)) : 'F';
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+    <!-- Leaflet JS (loaded early so page map scripts have access to L) -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <!-- MarketLink SaaS Design Tokens & Stylesheet -->
     <link rel="stylesheet" href="<?= ASSETS_URL ?>css/style.css?v=<?= time() ?>">
 
