@@ -204,36 +204,11 @@ require_once __DIR__ . '/../includes/header.php';
                             Don't have an account yet? <a href="<?= BASE_URL ?>auth/register.php" class="fw-bold text-primary">Create an account</a>
                         </div>
 
-                        <!-- Quick Demo Credentials Helper -->
-                        <div class="demo-creds-box">
-                            <div class="fw-semibold small text-muted mb-2 d-flex align-items-center justify-content-between">
-                                <span><i class="bi bi-lightning-charge-fill text-warning me-1"></i> Quick Demo Access</span>
-                                <span class="badge bg-white text-muted border">One-Click Fill</span>
-                            </div>
-                            <div class="d-flex flex-wrap gap-2">
-                                <button type="button" class="btn btn-sm btn-outline-secondary bg-white text-dark py-1 px-2" onclick="fillCreds('sarah.customer@marketlink.test', 'Customer@123')">
-                                    <i class="bi bi-person me-1"></i> Customer
-                                </button>
-                                <button type="button" class="btn btn-sm btn-outline-secondary bg-white text-dark py-1 px-2" onclick="fillCreds('greenvalley@marketlink.test', 'Farmer@123')">
-                                    <i class="bi bi-shop me-1"></i> Farmer Stall
-                                </button>
-                                <button type="button" class="btn btn-sm btn-outline-secondary bg-white text-dark py-1 px-2" onclick="fillCreds('admin@marketlink.test', 'Admin@123')">
-                                    <i class="bi bi-shield-lock me-1"></i> Administrator
-                                </button>
-                            </div>
-                        </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<script>
-function fillCreds(email, password) {
-    document.getElementById('email').value = email;
-    document.getElementById('password').value = password;
-}
-</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

@@ -154,12 +154,19 @@ Use these accounts to demo every role:
 
 ---
 
-## Password Reset (No Mail Server Required)
+## Password Reset & SMTP Email Configuration
 
-1. Go to `http://localhost/marketlink/auth/forgot-password.php`
-2. Enter any registered email.
-3. The reset token is displayed **on screen** (no email sent — suitable for local demo).
-4. Copy the token and use the reset link shown.
+1. Configure your SMTP mail settings in [`config/mail.php`](file:///e:/xampp/htdocs/marketlink/config/mail.php):
+   - `SMTP_HOST`: e.g. `smtp.gmail.com`
+   - `SMTP_PORT`: e.g. `587` (TLS) or `465` (SSL)
+   - `SMTP_ENCRYPTION`: `'tls'` or `'ssl'`
+   - `SMTP_USERNAME`: Your SMTP email address
+   - `SMTP_PASSWORD`: Your SMTP or App Password
+2. Go to `http://localhost/marketlink/auth/forgot-password.php`
+3. Enter a registered email address. The system validates whether the account exists in the database.
+4. If valid, a secure single-use token and password reset URL are generated and dispatched to the recipient email via SMTP.
+5. The user opens the received reset URL (`auth/reset-password.php?token=...`) to securely set a new password.
+6. *(Development Fallback)*: If SMTP credentials are not yet configured in local environment, a direct link is also made available so local development is never blocked.
 
 ---
 
@@ -171,14 +178,18 @@ marketlink/
 │   ├── css/style.css          # Custom design tokens & styles
 │   └── js/main.js             # Vanilla JS utilities
 ├── auth/                      # Login, register, logout, password reset
+│   ├── forgot-password.php    # Email verification & SMTP reset dispatcher
+│   └── reset-password.php     # Token validation & new password setter
 ├── admin/                     # Admin dashboard, management, reports
 ├── customer/                  # Browse, cart, checkout, orders, favorites
 ├── farmer/                    # Products, orders, profile, reviews
 ├── config/
 │   ├── db.php                 # Database connection (PDO)
+│   ├── mail.php               # SMTP mail configuration (Port, Host, Auth)
 │   └── constants.php          # App-wide constants
 ├── includes/
 │   ├── functions.php          # Helper functions (CSRF, flash, sanitize)
+│   ├── mailer.php             # Lightweight pure-PHP SMTP client
 │   ├── auth-check.php         # Role-based route guard
 │   ├── header.php             # Shared navigation header
 │   └── footer.php             # Shared footer + scripts

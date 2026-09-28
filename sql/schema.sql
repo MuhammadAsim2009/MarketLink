@@ -148,3 +148,14 @@ CREATE TABLE IF NOT EXISTS `password_resets` (
     INDEX `idx_resets_token` (`token`),
     INDEX `idx_resets_email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Password Reset Attempt Rate Limiting table (Max 5 attempts / 30 mins)
+CREATE TABLE IF NOT EXISTS `password_reset_attempts` (
+    `attempt_id` INT AUTO_INCREMENT PRIMARY KEY,
+    `ip_address` VARCHAR(45) NOT NULL,
+    `email` VARCHAR(150) DEFAULT NULL,
+    `attempted_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX `idx_attempts_ip_time` (`ip_address`, `attempted_at`),
+    INDEX `idx_attempts_email_time` (`email`, `attempted_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
