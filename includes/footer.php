@@ -8,15 +8,15 @@
 <!-- ── Footer ──────────────────────────────────────────────────── -->
 <footer class="ml-footer">
     <div class="container">
-        <div class="row g-5">
+        <div class="row g-4 g-lg-5">
 
             <!-- Brand Column -->
-            <div class="col-lg-4 col-md-6">
+            <div class="col-lg-4 col-md-6 mb-2 mb-lg-0">
                 <div class="footer-brand mb-3">
                     <span class="brand-icon"><i class="bi bi-flower1"></i></span>
                     Market<span style="color:var(--accent)">Link</span>
                 </div>
-                <p class="mb-4" style="max-width:300px; line-height:1.7;">
+                <p class="mb-4" style="max-width:320px; line-height:1.7;">
                     Connecting local farmers with community shoppers. Farm-fresh produce, pre-ordered and picked up directly at the weekend stall.
                 </p>
                 <div class="d-flex flex-wrap gap-2">
@@ -50,17 +50,20 @@
             </div>
 
             <!-- Project Info -->
-            <div class="col-lg-4 col-md-6 footer-col">
+            <div class="col-lg-4 col-md-12 footer-col">
                 <h6>About MarketLink</h6>
-                <p class="mb-3">
+                <p class="mb-3" style="line-height:1.7;">
                     A digital community platform connecting local sustainable growers directly with neighborhood shoppers. Built with a zero-food-waste mission.
                 </p>
-                <a href="<?= is_admin() ? BASE_URL . 'admin/dashboard.php' : BASE_URL . 'auth/login.php' ?>"
-                   style="display:inline-flex;align-items:center;gap:6px;color:rgba(255,255,255,.55);font-size:.8rem;border:1px solid rgba(255,255,255,.12);padding:.35rem .75rem;border-radius:var(--radius-sm);transition:all var(--transition);"
-                   onmouseover="this.style.color='#fff';this.style.borderColor='rgba(255,255,255,.35)';"
-                   onmouseout="this.style.color='rgba(255,255,255,.55)';this.style.borderColor='rgba(255,255,255,.12)';">
-                    <i class="bi bi-shield-lock-fill"></i> Admin Portal
-                </a>
+                <div class="d-flex flex-wrap align-items-center gap-3">
+                    <a href="<?= is_admin() ? BASE_URL . 'admin/dashboard.php' : BASE_URL . 'auth/login.php' ?>"
+                       style="display:inline-flex;align-items:center;gap:6px;color:rgba(255,255,255,.75);font-size:.825rem;border:1px solid rgba(255,255,255,.18);padding:.45rem .85rem;border-radius:var(--radius-sm);transition:all var(--transition);text-decoration:none;background:rgba(255,255,255,.05);"
+                       onmouseover="this.style.color='#fff';this.style.borderColor='rgba(255,255,255,.4)';this.style.background='rgba(255,255,255,.1)';"
+                       onmouseout="this.style.color='rgba(255,255,255,.75)';this.style.borderColor='rgba(255,255,255,.18)';this.style.background='rgba(255,255,255,.05)';">
+                        <i class="bi bi-shield-lock-fill text-warning"></i> Admin Portal
+                    </a>
+                    <span class="small text-white-50"><i class="bi bi-patch-check-fill text-success me-1"></i> SSL Protected</span>
+                </div>
             </div>
         </div>
 

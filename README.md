@@ -264,10 +264,6 @@ marketlink/
 │   ├── footer.php              # Global footer with brand links & scripts
 │   ├── functions.php           # Procedural helpers (CSRF, sanitization, flash)
 │   └── header.php              # Responsive glassmorphism navigation header
-├── md_files/                   # System Documentation & Specifications
-│   ├── INSTALL.md              # Detailed local installation manual
-│   ├── MarketLink...SRS.md     # Software Requirements Specification
-│   └── memory.md               # Engineering roadmap & completion logs
 ├── sql/                        # Database Scripts
 │   ├── schema.sql              # Complete relational InnoDB schema with indexes
 │   └── seed-data.sql           # FK-safe demonstration dataset
